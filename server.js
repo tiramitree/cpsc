@@ -6,9 +6,9 @@ const PORT = process.env.PORT || 3000;
 // 设置静态文件目录
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 默认首页（如果有 index.html）
+
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.listen(PORT, () => {
