@@ -26,14 +26,13 @@ app.use(session({
 }));
 
 // PostgreSQL connection (Azure)
+const { Pool } = require('pg');
+
 const pool = new Pool({
-  user: 'admin1',
-  host: 'team6.postgres.database.azure.com',
-  database: 'Recalls',
-  password: 'BIT4454!',
-  port: 5432,
-  ssl: { rejectUnauthorized: false } // Accept self-signed
+  connectionString: process.env.POSTGRES_CONN_STRING,
+  ssl: { rejectUnauthorized: false }
 });
+
 
 // Login API
 app.post('/api/login', (req, res) => {

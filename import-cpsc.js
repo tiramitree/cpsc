@@ -12,14 +12,13 @@ const { Pool } = require('pg');
 const nodemailer = require('nodemailer');
 
 // Configure PostgreSQL (Azure)
+const { Pool } = require('pg');
+
 const pool = new Pool({
-  user: 'admin1',
-  host: 'team6.postgres.database.azure.com',
-  database: 'Recalls',
-  password: 'BIT4454!',
-  port: 5432,
+  connectionString: process.env.POSTGRES_CONN_STRING,
   ssl: { rejectUnauthorized: false }
 });
+
 
 // Configure email transport
 const transporter = nodemailer.createTransport({
@@ -144,3 +143,4 @@ async function importRecalls() {
 
 // Run the import function
 importRecalls();
+
