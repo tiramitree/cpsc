@@ -1,0 +1,87 @@
+<!-- shortlist.html -->
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Shortlist Recalls</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="recalls.html">Recalls</a></li>
+        <li class="nav-item"><a class="nav-link" href="import-recalls.html">Import</a></li>
+        <li class="nav-item"><a class="nav-link active" href="shortlist.html">Shortlist</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h2>Shortlist Recalls</h2>
+  <form id="shortlistForm" method="POST" action="/api/shortlist">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Select</th>
+          <th>Recall ID</th>
+          <th>Title</th>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Hard-coded example rows. Adjust or fill dynamically. -->
+        <tr>
+          <td><input type="checkbox" name="selectedRecalls" value="123"></td>
+          <td>123</td>
+          <td>Example Product</td>
+          <td>2025-01-15</td>
+          <td>Toy</td>
+          <td>High</td>
+        </tr>
+        <tr>
+          <td><input type="checkbox" name="selectedRecalls" value="124"></td>
+          <td>124</td>
+          <td>Another Product</td>
+          <td>2025-02-20</td>
+          <td>Electronic</td>
+          <td>Medium</td>
+        </tr>
+      </tbody>
+    </table>
+    <button type="submit" id="shortlistBtn" class="btn btn-primary" disabled>Shortlist Selected</button>
+  </form>
+</div>
+
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script>
+  // Simple script: enable button only if user checks 3-5 items
+  const checkboxes = document.querySelectorAll('input[name="selectedRecalls"]');
+  const btn = document.getElementById('shortlistBtn');
+  const form = document.getElementById('shortlistForm');
+
+  function updateButton(){
+    let count = 0;
+    checkboxes.forEach(cb => {
+      if(cb.checked) count++;
+    });
+    // Only enable the button if 3-5 items are checked
+    btn.disabled = !(count >= 3 && count <= 5);
+  }
+
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', updateButton);
+  });
+</script>
+</body>
+</html>
