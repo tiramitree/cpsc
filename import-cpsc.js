@@ -26,6 +26,7 @@ async function sendHighPriorityEmail(recall) {
     <p><strong>Type:</strong> ${recall.Product_Type}</p>
     <p><strong>Category:</strong> ${recall.Category}</p>
     <p><strong>Date:</strong> ${recall.Recall_Date}</p>
+    <p><a href="${recall.URL}" target="_blank">🔗 View Full Recall</a></p>
   `;
 
   await transporter.sendMail({
@@ -59,8 +60,9 @@ async function importRecalls() {
           "Product_Name",
           "Product_Type",
           "Category",
-          "Priority_Status"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+          "Priority_Status",
+          "URL"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       `, [
         recallID,
         item.RecallNumber || '',
@@ -68,7 +70,8 @@ async function importRecalls() {
         product.Name || '',
         product.Type || '',
         product.CategoryID || '',
-        priority
+        priority,
+        item.URL || ''
       ]);
 
       count++;
@@ -79,7 +82,8 @@ async function importRecalls() {
           Product_Name: product.Name || '(Unknown)',
           Product_Type: product.Type || '',
           Category: product.CategoryID || '',
-          Recall_Date: item.RecallDate
+          Recall_Date: item.RecallDate,
+          URL: item.URL || ''
         });
       }
     }

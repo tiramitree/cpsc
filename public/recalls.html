@@ -41,10 +41,11 @@
           <th>Recall ID</th>
           <th>Recall Number</th>
           <th>Date</th>
+          <th>Product Name</th>
+          <th>Product Type</th>
+          <th>Category</th>
           <th>Priority</th>
-          <th>Title</th>
-          <th>Consumer Contact</th>
-          <th>Last Publish Date</th>
+          <th>URL</th>
         </tr>
       </thead>
       <tbody id="recallsTableBody">
@@ -58,10 +59,6 @@
 <script src="bold-and-bright.js"></script>
 
 <script>
-/**
- * On page load, fetch the recalls from /api/recalls
- * and append rows to the table body.
- */
 window.addEventListener('DOMContentLoaded', async () => {
   try {
     const response = await fetch('/api/recalls');
@@ -70,21 +67,23 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     const tbody = document.getElementById('recallsTableBody');
 
+    if (!Array.isArray(recalls) || recalls.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No recall data available.</td></tr>';
+      return;
+    }
+
     recalls.forEach(r => {
       const tr = document.createElement('tr');
-
-      // Create table cells for each column
       tr.innerHTML = `
-  <td>${r.Recall_ID || ''}</td>
-  <td>${r.Recall_Number || ''}</td>
-  <td>${r.Recall_Date ? r.Recall_Date.slice(0,10) : ''}</td>
-  <td>${r.Priority_Status || ''}</td>
-  <td>${r.Product_Name || ''}</td>
-  <td>${r.Product_Type || ''}</td>
-  <td>${r.Category || ''}</td>
-`;
-
-
+        <td>${r.Recall_ID || ''}</td>
+        <td>${r.Recall_Number || ''}</td>
+        <td>${r.Recall_Date ? r.Recall_Date.slice(0,10) : ''}</td>
+        <td>${r.Product_Name || ''}</td>
+        <td>${r.Product_Type || ''}</td>
+        <td>${r.Category || ''}</td>
+        <td>${r.Priority_Status || ''}</td>
+        <td><a href="${r.URL || '#'}" target="_blank">Link</a></td>
+      `;
       tbody.appendChild(tr);
     });
   } catch (err) {

@@ -69,12 +69,13 @@ app.get('/api/recalls', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT "Recall_ID", "Recall_Number", "Recall_Date",
-             "Product_Name", "Product_Type", "Category", "Priority_Status"
+             "Product_Name", "Product_Type", "Category", "Priority_Status", "URL"
       FROM recalls ORDER BY "Recall_Date" DESC LIMIT 100
     `);
     console.log(`[DB] Loaded ${result.rows.length} rows from Recalls`);
     res.json(result.rows);
   } catch (err) {
+    console.error('[DB ERROR]', err);
     res.status(500).json({ error: err.message });
   }
 });

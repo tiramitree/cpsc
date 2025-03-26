@@ -1,4 +1,4 @@
-<!-- shortlist.html (字段改为实际数据库字段名) -->
+<!-- shortlist.html (字段改为实际数据库字段名，并添加 URL 与无数据提示) -->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -38,6 +38,7 @@
           <th>Recall Date</th>
           <th>Category</th>
           <th>Priority Status</th>
+          <th>URL</th>
         </tr>
       </thead>
       <tbody id="shortlistTableBody">
@@ -55,6 +56,10 @@
     .then(response => response.json())
     .then(data => {
       const tableBody = document.getElementById('shortlistTableBody');
+      if (!data.length) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No recall data available.</td></tr>';
+        return;
+      }
       data.forEach(recall => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -64,6 +69,7 @@
           <td>${recall.Recall_Date ? recall.Recall_Date.slice(0,10) : ''}</td>
           <td>${recall.Category || ''}</td>
           <td>${recall.Priority_Status || ''}</td>
+          <td><a href="${recall.URL || '#'}" target="_blank">Link</a></td>
         `;
         tableBody.appendChild(tr);
       });

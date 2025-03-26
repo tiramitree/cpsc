@@ -1,4 +1,4 @@
-<!-- reports.html (改为动态数据版本) -->
+<!-- reports.html (改为动态数据版本，带 disclaimer 和 Chart.js) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,25 +42,34 @@
 
 <script>
   async function loadChart(endpoint, canvasId, labelText, type = 'bar', labelField = 'label', valueField = 'count') {
-    const res = await fetch(endpoint);
-    const data = await res.json();
-    const labels = data.map(row => row[labelField]);
-    const values = data.map(row => row[valueField]);
-    new Chart(document.getElementById(canvasId), {
-      type: type,
-      data: {
-        labels: labels,
-        datasets: [{
-          label: labelText,
-          data: values,
-          backgroundColor: type === 'bar' ? '#0d6efd' : undefined,
-          borderColor: type === 'line' ? '#fd7e14' : undefined,
-          tension: type === 'line' ? 0.3 : undefined,
-          fill: false
-        }]
-      },
-      options: { responsive: true }
-    });
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        document.getElementById(canvasId).outerHTML = `<p class='text-muted text-center'>No data available for ${labelText}.</p>`;
+        return;
+      }
+      const labels = data.map(row => row[labelField]);
+      const values = data.map(row => row[valueField]);
+      new Chart(document.getElementById(canvasId), {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: labelText,
+            data: values,
+            backgroundColor: type === 'bar' ? '#0d6efd' : undefined,
+            borderColor: type === 'line' ? '#fd7e14' : undefined,
+            tension: type === 'line' ? 0.3 : undefined,
+            fill: false
+          }]
+        },
+        options: { responsive: true }
+      });
+    } catch (err) {
+      console.error(`Chart error loading ${endpoint}:`, err);
+      document.getElementById(canvasId).outerHTML = `<p class='text-danger text-center'>Failed to load ${labelText}.</p>`;
+    }
   }
 
   loadChart('/api/reports/category', 'barChartCategory', 'High Priority Recalls');
