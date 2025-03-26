@@ -1,5 +1,4 @@
-<!-- reports.html -->
-<!-- Visual BI Chart Placeholder with Disclaimer Injection -->
+<!-- reports.html (改为动态数据版本) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,46 +41,31 @@
 </div>
 
 <script>
-  const barCategory = new Chart(document.getElementById("barChartCategory"), {
-    type: 'bar',
-    data: {
-      labels: ["Toys", "Electronics", "Appliances", "Furniture"],
-      datasets: [{
-        label: "High Priority Recalls",
-        data: [12, 7, 4, 9],
-        backgroundColor: "#dc3545"
-      }]
-    },
-    options: { responsive: true }
-  });
+  async function loadChart(endpoint, canvasId, labelText, type = 'bar', labelField = 'label', valueField = 'count') {
+    const res = await fetch(endpoint);
+    const data = await res.json();
+    const labels = data.map(row => row[labelField]);
+    const values = data.map(row => row[valueField]);
+    new Chart(document.getElementById(canvasId), {
+      type: type,
+      data: {
+        labels: labels,
+        datasets: [{
+          label: labelText,
+          data: values,
+          backgroundColor: type === 'bar' ? '#0d6efd' : undefined,
+          borderColor: type === 'line' ? '#fd7e14' : undefined,
+          tension: type === 'line' ? 0.3 : undefined,
+          fill: false
+        }]
+      },
+      options: { responsive: true }
+    });
+  }
 
-  const barType = new Chart(document.getElementById("barChartType"), {
-    type: 'bar',
-    data: {
-      labels: ["Ride-On", "Tools", "Kitchen", "Clothing"],
-      datasets: [{
-        label: "Prioritized Recalls",
-        data: [3, 8, 6, 2],
-        backgroundColor: "#0d6efd"
-      }]
-    },
-    options: { responsive: true }
-  });
-
-  const lineRisk = new Chart(document.getElementById("lineChartRisk"), {
-    type: 'line',
-    data: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      datasets: [{
-        label: "High-Risk Alerts",
-        data: [5, 8, 6, 12, 9, 11],
-        fill: false,
-        borderColor: "#fd7e14",
-        tension: 0.3
-      }]
-    },
-    options: { responsive: true }
-  });
+  loadChart('/api/reports/category', 'barChartCategory', 'High Priority Recalls');
+  loadChart('/api/reports/product-type', 'barChartType', 'Prioritized Recalls by Product Type');
+  loadChart('/api/reports/by-month', 'lineChartRisk', 'Monthly High Priority Recalls', 'line', 'month', 'count');
 </script>
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="bold-and-bright.js"></script>

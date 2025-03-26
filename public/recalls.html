@@ -45,7 +45,6 @@
           <th>Title</th>
           <th>Consumer Contact</th>
           <th>Last Publish Date</th>
-          <th>URL</th>
         </tr>
       </thead>
       <tbody id="recallsTableBody">
@@ -76,15 +75,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
       // Create table cells for each column
       tr.innerHTML = `
-        <td>${r.RecallID || ''}</td>
-        <td>${r.RecallNumber || ''}</td>
-        <td>${r.RecallDate ? r.RecallDate.slice(0,10) : ''}</td>
-        <td>${r.PriorityLevel || ''}</td>
-        <td>${r.Title || ''}</td>
-        <td>${r.ConsumerContact || ''}</td>
-        <td>${r.LastPublishDate ? r.LastPublishDate.slice(0,10) : ''}</td>
-        <td><a href="${r.URL || '#'}" target="_blank">Link</a></td>
-      `;
+  <td>${r.Recall_ID || ''}</td>
+  <td>${r.Recall_Number || ''}</td>
+  <td>${r.Recall_Date ? r.Recall_Date.slice(0,10) : ''}</td>
+  <td>${r.Priority_Status || ''}</td>
+  <td>${r.Product_Name || ''}</td>
+  <td>${r.Product_Type || ''}</td>
+  <td>${r.Category || ''}</td>
+`;
+
 
       tbody.appendChild(tr);
     });

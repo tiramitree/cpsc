@@ -1,15 +1,10 @@
 <!-- import-recalls.html -->
-<!-- 
-  Admin Recall Import Page with RiskLevel and PriorityLevel support.
-  Submits recall details to /api/import.
--->
-
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="en">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Import Recalls - CPSC</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Recall</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
@@ -21,79 +16,44 @@
 </nav>
 
 <div class="container mt-5">
-  <h2 class="text-center mb-4">Import Recall (Manual Entry)</h2>
+  <h2 class="text-center mb-4">Manual Recall Entry</h2>
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
       <form action="/api/import" method="post" id="importForm">
-        <!-- Basic recall fields -->
+
         <div class="mb-3">
-          <label for="RecallID" class="form-label">Recall ID *</label>
-          <input type="text" class="form-control" id="RecallID" name="RecallID" required>
-        </div>
-        <div class="mb-3">
-          <label for="RecallNumber" class="form-label">Recall Number</label>
-          <input type="text" class="form-control" id="RecallNumber" name="RecallNumber">
-        </div>
-        <div class="mb-3">
-          <label for="RecallDate" class="form-label">Recall Date *</label>
-          <input type="date" class="form-control" id="RecallDate" name="RecallDate" required>
-        </div>
-        <div class="mb-3">
-          <label for="Description" class="form-label">Description</label>
-          <textarea class="form-control" id="Description" name="Description" rows="3"></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="URL" class="form-label">URL</label>
-          <input type="url" class="form-control" id="URL" name="URL">
-        </div>
-        <div class="mb-3">
-          <label for="Title" class="form-label">Title</label>
-          <input type="text" class="form-control" id="Title" name="Title">
-        </div>
-        <div class="mb-3">
-          <label for="ConsumerContact" class="form-label">Consumer Contact</label>
-          <input type="text" class="form-control" id="ConsumerContact" name="ConsumerContact">
-        </div>
-        <div class="mb-3">
-          <label for="LastPublishDate" class="form-label">Last Publish Date</label>
-          <input type="date" class="form-control" id="LastPublishDate" name="LastPublishDate">
-        </div>
-        <div class="mb-3">
-          <label for="Name" class="form-label">Product Name</label>
-          <input type="text" class="form-control" id="Name" name="Name">
-        </div>
-        <div class="mb-3">
-          <label for="Model" class="form-label">Model</label>
-          <input type="text" class="form-control" id="Model" name="Model">
-        </div>
-        <div class="mb-3">
-          <label for="Type" class="form-label">Type</label>
-          <input type="text" class="form-control" id="Type" name="Type">
-        </div>
-        <div class="mb-3">
-          <label for="CategoryID" class="form-label">Category ID</label>
-          <input type="text" class="form-control" id="CategoryID" name="CategoryID">
-        </div>
-        <div class="mb-3">
-          <label for="NumberOfUnits" class="form-label">Number Of Units</label>
-          <input type="number" min="0" class="form-control" id="NumberOfUnits" name="NumberOfUnits">
+          <label for="Recall_ID" class="form-label">Recall ID *</label>
+          <input type="text" class="form-control" id="Recall_ID" name="Recall_ID" required>
         </div>
 
-        <!-- New: Risk Level Dropdown -->
         <div class="mb-3">
-          <label for="RiskLevel" class="form-label">Risk Level *</label>
-          <select class="form-select" id="RiskLevel" name="RiskLevel" required>
-            <option value="">Select Risk Level</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
+          <label for="Recall_Number" class="form-label">Recall Number</label>
+          <input type="text" class="form-control" id="Recall_Number" name="Recall_Number">
         </div>
 
-        <!-- New: Priority Level Dropdown -->
         <div class="mb-3">
-          <label for="PriorityLevel" class="form-label">Priority Level *</label>
-          <select class="form-select" id="PriorityLevel" name="PriorityLevel" required>
+          <label for="Recall_Date" class="form-label">Recall Date *</label>
+          <input type="date" class="form-control" id="Recall_Date" name="Recall_Date" required>
+        </div>
+
+        <div class="mb-3">
+          <label for="Product_Name" class="form-label">Product Name</label>
+          <input type="text" class="form-control" id="Product_Name" name="Product_Name">
+        </div>
+
+        <div class="mb-3">
+          <label for="Product_Type" class="form-label">Product Type</label>
+          <input type="text" class="form-control" id="Product_Type" name="Product_Type">
+        </div>
+
+        <div class="mb-3">
+          <label for="Category" class="form-label">Category</label>
+          <input type="text" class="form-control" id="Category" name="Category">
+        </div>
+
+        <div class="mb-3">
+          <label for="Priority_Status" class="form-label">Priority Status *</label>
+          <select class="form-select" id="Priority_Status" name="Priority_Status" required>
             <option value="">Select Priority</option>
             <option value="High">High</option>
             <option value="Low">Low</option>
@@ -108,14 +68,12 @@
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="bold-and-bright.js"></script>
-
 <script>
-  // Frontend check: Prevent future dates
-  document.getElementById('importForm').addEventListener('submit', (e) => {
-    const dateVal = document.getElementById('RecallDate').value;
-    const chosenDate = new Date(dateVal);
+  // Prevent future Recall Date
+  document.getElementById('importForm').addEventListener('submit', e => {
+    const date = new Date(document.getElementById('Recall_Date').value);
     const now = new Date();
-    if (chosenDate > now) {
+    if (date > now) {
       e.preventDefault();
       alert("Recall date cannot be in the future!");
     }

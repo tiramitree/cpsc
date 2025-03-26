@@ -1,4 +1,4 @@
-<!-- shortlist.html -->
+<!-- shortlist.html (字段改为实际数据库字段名) -->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -34,10 +34,10 @@
         <tr>
           <th>Select</th>
           <th>Recall ID</th>
-          <th>Title</th>
-          <th>Date</th>
+          <th>Product Name</th>
+          <th>Recall Date</th>
           <th>Category</th>
-          <th>Priority</th>
+          <th>Priority Status</th>
         </tr>
       </thead>
       <tbody id="shortlistTableBody">
@@ -51,7 +51,6 @@
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="bold-and-bright.js"></script>
 <script>
-  // Load data from /api/recalls
   fetch('/api/recalls')
     .then(response => response.json())
     .then(data => {
@@ -59,12 +58,12 @@
       data.forEach(recall => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><input type="checkbox" name="selectedRecalls" value="${recall.RecallID}"></td>
-          <td>${recall.RecallID}</td>
-          <td>${recall.Title || ''}</td>
-          <td>${recall.RecallDate ? recall.RecallDate.slice(0,10) : ''}</td>
-          <td>${recall.CategoryID || ''}</td>
-          <td>${recall.PriorityLevel || ''}</td>
+          <td><input type="checkbox" name="selectedRecalls" value="${recall.Recall_ID}"></td>
+          <td>${recall.Recall_ID}</td>
+          <td>${recall.Product_Name || ''}</td>
+          <td>${recall.Recall_Date ? recall.Recall_Date.slice(0,10) : ''}</td>
+          <td>${recall.Category || ''}</td>
+          <td>${recall.Priority_Status || ''}</td>
         `;
         tableBody.appendChild(tr);
       });
