@@ -1,9 +1,9 @@
 /**
  * server.js
  * 
- * This is the main Express server file.
- * 1) Serves static files from public/ folder.
- * 2) Provides API endpoints for login and retrieving recalls from PostgreSQL.
+ * 1. Protects all routes from unauthorized access
+ * 2. Serves static files only after login
+ * 3. Handles login + session + PostgreSQL + recalls API
  */
 
 const express = require('express');
@@ -14,19 +14,16 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middleware
+// Parse request bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Setup session management
+// Setup session
 app.use(session({
   secret: 'cpsc-secret-key',
   resave: false,
   saveUninitialized: true,
 }));
-
-// Static assets
-app.use(express.static(path.join(__dirname, 'public')));
 
 // PostgreSQL connection
 const pool = new Pool({
@@ -38,12 +35,7 @@ const pool = new Pool({
   ssl: process.env.DB_SSL === 'true' || false
 });
 
-// Redirect root to login page
-app.get('/', (req, res) => {
-  res.redirect('/login.html');
-});
-
-// Login POST
+// Login API
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === 'admin') {
@@ -54,19 +46,34 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// Login check middleware for all protected routes
+// Public access for login only
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Redirect root to login page
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
+// Middleware: Block HTML access unless logged in
 app.use((req, res, next) => {
-  const publicFiles = ['/login.html', '/api/login'];
-  if (publicFiles.includes(req.path) || req.path.startsWith('/assets') || req.path.endsWith('.css') || req.path.endsWith('.js')) {
-    return next();
-  }
-  if (!req.session.loggedIn) {
+  const isPublic = req.path === '/login.html' || req.path === '/api/login';
+  const isAsset = req.path.endsWith('.js') || req.path.endsWith('.css') || req.path.startsWith('/assets');
+
+  if (isPublic || isAsset) return next();
+
+  if (req.path.endsWith('.html') && !req.session.loggedIn) {
     return res.redirect('/login.html');
   }
+
   next();
 });
 
-// Recalls data API
+// Static files (must be after login protection)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API: Get recalls from PostgreSQL
 app.get('/api/recalls', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -90,7 +97,7 @@ app.get('/api/recalls', async (req, res) => {
   }
 });
 
-// Launch server
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
