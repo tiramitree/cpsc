@@ -1,4 +1,10 @@
 <!-- login.html -->
+<!-- 
+  Login page requiring admin/admin or future database credentials.
+  Username and password fields are empty by default.
+  Only correct credentials allow navigation to index.html.
+-->
+
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -11,11 +17,14 @@
     <div class="row">
       <div class="col-md-6 col-lg-4 mx-auto">
         <h2 class="mb-4 text-center">CPSC Manager Login</h2>
-        <!-- Error message placeholder -->
-        <div id="errorMsg" class="alert alert-danger d-none"></div>
+
+        <!-- Show error message if redirected with error query -->
+        <div id="errorMsg" class="alert alert-danger d-none">Invalid login. Please try again.</div>
+
+        <!-- Login form with POST to /api/login -->
         <form id="loginForm" method="POST" action="/api/login">
           <div class="mb-3">
-            <label for="username" class="form-label">Username or Email</label>
+            <label for="username" class="form-label">Username</label>
             <input type="text" class="form-control" id="username" name="username" required>
           </div>
           <div class="mb-3">
@@ -24,12 +33,20 @@
           </div>
           <button type="submit" class="btn btn-primary w-100">Log In</button>
         </form>
-        <div class="mt-3">
-          <a href="#" class="text-decoration-none">Forgot Password?</a>
+
+        <div class="mt-3 text-center">
+          <small>Only valid credentials are accepted.</small>
         </div>
       </div>
     </div>
   </div>
+
   <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+  <script>
+    // If redirected with ?error=true, show error alert
+    if (window.location.search.includes("error=true")) {
+      document.getElementById("errorMsg").classList.remove("d-none");
+    }
+  </script>
 </body>
 </html>

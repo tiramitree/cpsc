@@ -1,4 +1,9 @@
 <!-- reports.html -->
+<!-- 
+  Demonstrates chart.js usage.
+  You can replace the sample data with actual DB query results 
+  if you create an endpoint and fetch it similarly to recalls.html.
+-->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -10,7 +15,6 @@
 </head>
 <body>
 
-<!-- 导航栏 -->
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
@@ -30,16 +34,14 @@
   </div>
 </nav>
 
-<!-- 内容 -->
 <div class="container mt-5">
   <h2 class="text-center mb-4">📊 Recall Reports</h2>
 
-  <!-- 图表区域 -->
   <div class="row mb-5">
     <div class="col-lg-12">
       <h4>High Priority Recalls per Category</h4>
       <canvas id="barChartCategory"></canvas>
-      <p class="text-muted">This chart shows how many high-priority recalls have been reported in each product category.</p>
+      <p class="text-muted">Shows how many High Priority recalls are in each category.</p>
     </div>
   </div>
 
@@ -47,7 +49,7 @@
     <div class="col-lg-12">
       <h4>Total Prioritized Recalls by Product Type and Week</h4>
       <canvas id="barChartWeek"></canvas>
-      <p class="text-muted">This chart tracks the number of prioritized recalls across different product types over weekly intervals.</p>
+      <p class="text-muted">Tracks the number of prioritized recalls over weekly intervals.</p>
     </div>
   </div>
 
@@ -55,14 +57,14 @@
     <div class="col-lg-12">
       <h4>High-Risk Recall Notifications Over Time</h4>
       <canvas id="lineChartRisk"></canvas>
-      <p class="text-muted">This line chart reflects the trend of high-risk recall alerts over time, helping to detect spikes.</p>
+      <p class="text-muted">Reflects the trend of high-risk recall alerts over time.</p>
     </div>
   </div>
 </div>
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script>
-  // 示例数据：你可以替换为动态加载的数据
+  // Demo data
   const barCategory = new Chart(document.getElementById("barChartCategory"), {
     type: 'bar',
     data: {
@@ -88,7 +90,10 @@
     },
     options: {
       responsive: true,
-      scales: { x: { stacked: true }, y: { stacked: true } }
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true }
+      }
     }
   });
 

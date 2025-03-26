@@ -1,4 +1,8 @@
 <!-- shortlist.html -->
+<!-- 
+  Currently only example checkboxes. 
+  In real usage, you might fetch from DB and let user mark 3-5 items to short-list.
+-->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -40,7 +44,7 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Hard-coded example rows. Adjust or fill dynamically. -->
+        <!-- Example rows. In production, fetch from DB and render checkboxes. -->
         <tr>
           <td><input type="checkbox" name="selectedRecalls" value="123"></td>
           <td>123</td>
@@ -65,17 +69,15 @@
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script>
-  // Simple script: enable button only if user checks 3-5 items
+  // Enable the "Shortlist Selected" button only if user checks 3-5 items
   const checkboxes = document.querySelectorAll('input[name="selectedRecalls"]');
   const btn = document.getElementById('shortlistBtn');
-  const form = document.getElementById('shortlistForm');
 
   function updateButton(){
     let count = 0;
     checkboxes.forEach(cb => {
       if(cb.checked) count++;
     });
-    // Only enable the button if 3-5 items are checked
     btn.disabled = !(count >= 3 && count <= 5);
   }
 

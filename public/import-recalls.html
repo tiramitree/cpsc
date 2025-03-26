@@ -1,4 +1,8 @@
 <!-- import-recalls.html -->
+<!-- 
+  A simple form to manually insert a new recall into the DB. 
+  Real usage requires /api/import route on the server side.
+-->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -9,7 +13,6 @@
 </head>
 <body>
 
-<!-- Minimal Nav for demonstration -->
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
@@ -29,11 +32,10 @@
 </nav>
 
 <div class="container mt-5">
-  <h2 class="text-center mb-4">Import Recalls</h2>
+  <h2 class="text-center mb-4">Import Recalls (Manual Entry)</h2>
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
       <form action="/api/import" method="post" id="importForm">
-        <!-- Minimal fields for demonstration. Adjust as needed. -->
         <div class="mb-3">
           <label for="RecallID" class="form-label">Recall ID (required)</label>
           <input type="text" class="form-control" id="RecallID" name="RecallID" required>
@@ -94,18 +96,17 @@
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script>
-  // Simple front-end validation example (optional)
-  document.getElementById('importForm').addEventListener('submit', (e)=>{
-    const dateVal = document.getElementById('RecallDate').value;
-    if(dateVal){
-      const chosenDate = new Date(dateVal);
-      const now = new Date();
-      if(chosenDate > now){
-        alert("Recall date cannot be in the future!");
-        e.preventDefault();
-      }
+document.getElementById('importForm').addEventListener('submit', (e)=>{
+  const dateVal = document.getElementById('RecallDate').value;
+  if(dateVal){
+    const chosenDate = new Date(dateVal);
+    const now = new Date();
+    if(chosenDate > now){
+      e.preventDefault();
+      alert("Recall date cannot be in the future!");
     }
-  });
+  }
+});
 </script>
 </body>
 </html>

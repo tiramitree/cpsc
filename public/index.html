@@ -1,4 +1,8 @@
 <!-- index.html -->
+<!-- 
+  Enhanced home page with more introduction text.
+  Code and comments in English, as requested.
+-->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -8,7 +12,7 @@
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
-  <!-- Simple Navbar -->
+  <!-- Navbar with links -->
   <nav class="navbar navbar-expand-md navbar-light bg-light">
     <div class="container">
       <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
@@ -29,12 +33,43 @@
     </div>
   </nav>
 
-  <!-- Hero Section -->
+  <!-- Hero / Intro Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h1 class="text-center mb-4">Welcome to the CPSC Recall Management Portal</h1>
+      <p class="text-center fs-5">
+        This portal helps you manage recalled products effectively. 
+        Track high-risk recalls, import the latest recall data from the CPSC, 
+        and monitor compliance to keep consumers safe.
+      </p>
+      <div class="text-center mt-4">
+        <img src="assets/brands/cpsc-logo.png" alt="CPSC Logo" style="max-width:200px;">
+      </div>
+    </div>
+  </section>
+
+  <!-- Additional info or feature highlights -->
   <section class="py-5">
     <div class="container">
-      <h1 class="text-center">Welcome to CPSC Recall Management</h1>
-      <p class="text-center">Manage your product recalls with ease and keep consumers safe.</p>
-      <div class="text-center mt-3">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card p-3">
+            <h4>Automated Data Import</h4>
+            <p>Easily fetch recall data from the official CPSC API, ensuring your system stays updated.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3">
+            <h4>High-Priority Alerts</h4>
+            <p>Receive immediate email notifications for any High-Priority recalls to take swift action.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3">
+            <h4>Reports & Analytics</h4>
+            <p>Visualize recall trends with interactive charts, helping you identify problem categories quickly.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
