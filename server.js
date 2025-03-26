@@ -29,7 +29,7 @@ app.use(session({
 const pool = new Pool({
   user: 'admin1',
   host: 'team6.postgres.database.azure.com',
-  database: 'team6',
+  database: 'Recalls',
   password: 'BIT4454!',
   port: 5432,
   ssl: { rejectUnauthorized: false } // Accept self-signed
