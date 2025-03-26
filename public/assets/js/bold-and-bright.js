@@ -1,61 +1,22 @@
-(function() {
-  "use strict"; // Start of use strict
+// bold-and-bright.js
 
-  function initParallax() {
+// Wait for the DOM to finish loading
+document.addEventListener("DOMContentLoaded", function () {
+  // Create a disclaimer element
+  const disclaimer = document.createElement("div");
 
-    if (!('requestAnimationFrame' in window)) return;
-    if (/Mobile|Android/.test(navigator.userAgent)) return;
+  // Apply styles to the disclaimer
+  disclaimer.style.backgroundColor = "#f8f9fa";
+  disclaimer.style.color = "#6c757d";
+  disclaimer.style.fontSize = "0.85rem";
+  disclaimer.style.textAlign = "center";
+  disclaimer.style.padding = "10px";
+  disclaimer.style.borderTop = "1px solid #dee2e6";
+  disclaimer.style.marginTop = "40px";
 
-    var parallaxItems = document.querySelectorAll('[data-bss-parallax]');
+  // Set the disclaimer message
+  disclaimer.innerText = "This website is for educational purposes only and is not an authorized recall management system for the CPSC.";
 
-    if (!parallaxItems.length) return;
-
-    var defaultSpeed = 0.5;
-    var visible = [];
-    var scheduled;
-
-    window.addEventListener('scroll', scroll);
-    window.addEventListener('resize', scroll);
-
-    scroll();
-
-    function scroll() {
-
-      visible.length = 0;
-
-      for (var i = 0; i < parallaxItems.length; i++) {
-        var rect = parallaxItems[i].getBoundingClientRect();
-        var speed = parseFloat(parallaxItems[i].getAttribute('data-bss-parallax-speed'), 10) || defaultSpeed;
-
-        if (rect.bottom > 0 && rect.top < window.innerHeight) {
-          visible.push({
-            speed: speed,
-            node: parallaxItems[i]
-          });
-        }
-
-      }
-
-      cancelAnimationFrame(scheduled);
-
-      if (visible.length) {
-        scheduled = requestAnimationFrame(update);
-      }
-
-    }
-
-    function update() {
-
-      for (var i = 0; i < visible.length; i++) {
-        var node = visible[i].node;
-        var speed = visible[i].speed;
-
-        node.style.transform = 'translate3d(0, ' + (-window.scrollY * speed) + 'px, 0)';
-      }
-
-    }
-  }
-
-  initParallax();
-})(); // End of use strict
-
+  // Append the disclaimer to the bottom of the page
+  document.body.appendChild(disclaimer);
+});

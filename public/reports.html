@@ -1,36 +1,18 @@
 <!-- reports.html -->
-<!-- 
-  Demonstrates chart.js usage.
-  You can replace the sample data with actual DB query results 
-  if you create an endpoint and fetch it similarly to recalls.html.
--->
+<!-- Visual BI Chart Placeholder with Disclaimer Injection -->
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="en">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Recall Reports - CPSC</title>
+  <meta charset="UTF-8">
+  <title>Recall Reports</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-            aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="recalls.html">Recalls</a></li>
-        <li class="nav-item"><a class="nav-link" href="import-recalls.html">Import</a></li>
-        <li class="nav-item"><a class="nav-link" href="shortlist.html">Shortlist</a></li>
-        <li class="nav-item"><a class="nav-link active" href="reports.html">Reports</a></li>
-      </ul>
-    </div>
   </div>
 </nav>
 
@@ -41,15 +23,13 @@
     <div class="col-lg-12">
       <h4>High Priority Recalls per Category</h4>
       <canvas id="barChartCategory"></canvas>
-      <p class="text-muted">Shows how many High Priority recalls are in each category.</p>
     </div>
   </div>
 
   <div class="row mb-5">
     <div class="col-lg-12">
-      <h4>Total Prioritized Recalls by Product Type and Week</h4>
-      <canvas id="barChartWeek"></canvas>
-      <p class="text-muted">Tracks the number of prioritized recalls over weekly intervals.</p>
+      <h4>Total Prioritized Recalls by Product Type</h4>
+      <canvas id="barChartType"></canvas>
     </div>
   </div>
 
@@ -57,14 +37,11 @@
     <div class="col-lg-12">
       <h4>High-Risk Recall Notifications Over Time</h4>
       <canvas id="lineChartRisk"></canvas>
-      <p class="text-muted">Reflects the trend of high-risk recall alerts over time.</p>
     </div>
   </div>
 </div>
 
-<script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script>
-  // Demo data
   const barCategory = new Chart(document.getElementById("barChartCategory"), {
     type: 'bar',
     data: {
@@ -78,23 +55,17 @@
     options: { responsive: true }
   });
 
-  const barWeek = new Chart(document.getElementById("barChartWeek"), {
+  const barType = new Chart(document.getElementById("barChartType"), {
     type: 'bar',
     data: {
-      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-      datasets: [
-        { label: "Toys", data: [2, 5, 3, 6], backgroundColor: "#0d6efd" },
-        { label: "Electronics", data: [1, 3, 2, 2], backgroundColor: "#6f42c1" },
-        { label: "Appliances", data: [0, 1, 1, 2], backgroundColor: "#198754" }
-      ]
+      labels: ["Ride-On", "Tools", "Kitchen", "Clothing"],
+      datasets: [{
+        label: "Prioritized Recalls",
+        data: [3, 8, 6, 2],
+        backgroundColor: "#0d6efd"
+      }]
     },
-    options: {
-      responsive: true,
-      scales: {
-        x: { stacked: true },
-        y: { stacked: true }
-      }
-    }
+    options: { responsive: true }
   });
 
   const lineRisk = new Chart(document.getElementById("lineChartRisk"), {
@@ -102,7 +73,7 @@
     data: {
       labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
       datasets: [{
-        label: "High-Risk Notifications",
+        label: "High-Risk Alerts",
         data: [5, 8, 6, 12, 9, 11],
         fill: false,
         borderColor: "#fd7e14",
@@ -112,6 +83,7 @@
     options: { responsive: true }
   });
 </script>
-
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="bold-and-bright.js"></script>
 </body>
 </html>

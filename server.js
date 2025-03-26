@@ -25,14 +25,14 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// PostgreSQL connection
+// PostgreSQL connection (Azure)
 const pool = new Pool({
-  user: process.env.DB_USER || 'your_pg_user',
-  host: process.env.DB_HOST || 'your_pg_host',
-  database: process.env.DB_NAME || 'your_pg_database',
-  password: process.env.DB_PASS || 'your_pg_password',
+  user: 'admin1',
+  host: 'team6.postgres.database.azure.com',
+  database: 'team6',
+  password: 'BIT4454!',
   port: 5432,
-  ssl: process.env.DB_SSL === 'true' || false
+  ssl: { rejectUnauthorized: false } // Accept self-signed
 });
 
 // Login API
@@ -58,7 +58,7 @@ app.get('/', (req, res) => {
 
 // Middleware: Block HTML access unless logged in
 app.use((req, res, next) => {
-  const isPublic = req.path === '/login.html' || req.path === '/api/login';
+  const isPublic = (req.path === '/login.html' || req.path === '/api/login');
   const isAsset = req.path.endsWith('.js') || req.path.endsWith('.css') || req.path.startsWith('/assets');
 
   if (isPublic || isAsset) return next();
@@ -70,10 +70,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static files (must be after login protection)
+// Serve static files (once authorized)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API: Get recalls from PostgreSQL
+/**
+ * GET /api/recalls
+ * Fetch up to 100 recall records from PostgreSQL and return as JSON.
+ */
 app.get('/api/recalls', async (req, res) => {
   try {
     const result = await pool.query(`

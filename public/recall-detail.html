@@ -1,17 +1,18 @@
 <!-- recall-detail.html -->
 <!-- 
-  Still an example page. 
-  In real usage, you can fetch a single recall by ID 
-  and display more details. 
+  Recall Detail Page to show all attributes of a selected recall.
 -->
+
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="en">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>Recall Detail - CPSC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
+
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
@@ -19,24 +20,49 @@
 </nav>
 
 <div class="container mt-5">
-  <h2 class="text-center mb-4">Recall Details</h2>
-  <!-- Hard-coded example. Implementation needed to fetch from DB by recall ID -->
-  <div class="card">
-    <div class="card-body">
-      <h5 class="card-title">Recall #123 - Example Recalled Product</h5>
-      <p class="card-text">
-        <strong>Recall ID:</strong> 123<br>
-        <strong>Recall Date:</strong> 2025-01-15<br>
-        <strong>Description:</strong> This product may cause certain safety issues...
-      </p>
-      <p>
-        <strong>Consumer Contact:</strong> +1-800-XXX-XXXX
-      </p>
-      <a href="recalls.html" class="btn btn-secondary">Back to List</a>
-    </div>
+  <h2 class="text-center mb-4">Recall Detail</h2>
+
+  <div id="recall-details" class="border p-4 rounded shadow-sm bg-light">
+    <p><strong>Recall ID:</strong> <span id="RecallID"></span></p>
+    <p><strong>Recall Number:</strong> <span id="RecallNumber"></span></p>
+    <p><strong>Recall Date:</strong> <span id="RecallDate"></span></p>
+    <p><strong>Product Name:</strong> <span id="Name"></span></p>
+    <p><strong>Product Type:</strong> <span id="Type"></span></p>
+    <p><strong>Category ID:</strong> <span id="CategoryID"></span></p>
+    <p><strong>Number of Units:</strong> <span id="NumberOfUnits"></span></p>
+    <p><strong>Title:</strong> <span id="Title"></span></p>
+    <p><strong>Description:</strong> <span id="Description"></span></p>
+    <p><strong>Consumer Contact:</strong> <span id="ConsumerContact"></span></p>
+    <p><strong>Last Publish Date:</strong> <span id="LastPublishDate"></span></p>
+    <p><strong>URL:</strong> <a id="URL" href="#" target="_blank">Link</a></p>
+
+    <!-- New: Risk Level and Priority -->
+    <p class="text-danger fw-bold"><strong>Risk Level:</strong> <span id="RiskLevel"></span></p>
+    <p class="text-warning fw-bold"><strong>Priority Level:</strong> <span id="PriorityLevel"></span></p>
   </div>
 </div>
 
+<script>
+  // Load recall details from query parameters or backend
+  const params = new URLSearchParams(window.location.search);
+  document.getElementById("RecallID").innerText = params.get("RecallID") || "";
+  document.getElementById("RecallNumber").innerText = params.get("RecallNumber") || "";
+  document.getElementById("RecallDate").innerText = params.get("RecallDate") || "";
+  document.getElementById("Name").innerText = params.get("Name") || "";
+  document.getElementById("Type").innerText = params.get("Type") || "";
+  document.getElementById("CategoryID").innerText = params.get("CategoryID") || "";
+  document.getElementById("NumberOfUnits").innerText = params.get("NumberOfUnits") || "";
+  document.getElementById("Title").innerText = params.get("Title") || "";
+  document.getElementById("Description").innerText = params.get("Description") || "";
+  document.getElementById("ConsumerContact").innerText = params.get("ConsumerContact") || "";
+  document.getElementById("LastPublishDate").innerText = params.get("LastPublishDate") || "";
+  document.getElementById("URL").href = params.get("URL") || "#";
+  document.getElementById("RiskLevel").innerText = params.get("RiskLevel") || "N/A";
+  document.getElementById("PriorityLevel").innerText = params.get("PriorityLevel") || "N/A";
+</script>
+
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="bold-and-bright.js"></script>
+
 </body>
 </html>

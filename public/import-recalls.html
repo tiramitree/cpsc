@@ -1,14 +1,15 @@
 <!-- import-recalls.html -->
 <!-- 
-  A simple form to manually insert a new recall into the DB. 
-  Real usage requires /api/import route on the server side.
+  Admin Recall Import Page with RiskLevel and PriorityLevel support.
+  Submits recall details to /api/import.
 -->
+
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
   <title>Import Recalls - CPSC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
@@ -16,28 +17,17 @@
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-            aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="recalls.html">Recalls</a></li>
-        <li class="nav-item"><a class="nav-link active" href="import-recalls.html">Import Recalls</a></li>
-        <li class="nav-item"><a class="nav-link" href="shortlist.html">Shortlist</a></li>
-      </ul>
-    </div>
   </div>
 </nav>
 
 <div class="container mt-5">
-  <h2 class="text-center mb-4">Import Recalls (Manual Entry)</h2>
+  <h2 class="text-center mb-4">Import Recall (Manual Entry)</h2>
   <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
       <form action="/api/import" method="post" id="importForm">
+        <!-- Basic recall fields -->
         <div class="mb-3">
-          <label for="RecallID" class="form-label">Recall ID (required)</label>
+          <label for="RecallID" class="form-label">Recall ID *</label>
           <input type="text" class="form-control" id="RecallID" name="RecallID" required>
         </div>
         <div class="mb-3">
@@ -45,7 +35,7 @@
           <input type="text" class="form-control" id="RecallNumber" name="RecallNumber">
         </div>
         <div class="mb-3">
-          <label for="RecallDate" class="form-label">Recall Date</label>
+          <label for="RecallDate" class="form-label">Recall Date *</label>
           <input type="date" class="form-control" id="RecallDate" name="RecallDate" required>
         </div>
         <div class="mb-3">
@@ -54,7 +44,7 @@
         </div>
         <div class="mb-3">
           <label for="URL" class="form-label">URL</label>
-          <input type="text" class="form-control" id="URL" name="URL">
+          <input type="url" class="form-control" id="URL" name="URL">
         </div>
         <div class="mb-3">
           <label for="Title" class="form-label">Title</label>
@@ -86,8 +76,30 @@
         </div>
         <div class="mb-3">
           <label for="NumberOfUnits" class="form-label">Number Of Units</label>
-          <input type="number" min="1" class="form-control" id="NumberOfUnits" name="NumberOfUnits">
+          <input type="number" min="0" class="form-control" id="NumberOfUnits" name="NumberOfUnits">
         </div>
+
+        <!-- New: Risk Level Dropdown -->
+        <div class="mb-3">
+          <label for="RiskLevel" class="form-label">Risk Level *</label>
+          <select class="form-select" id="RiskLevel" name="RiskLevel" required>
+            <option value="">Select Risk Level</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+
+        <!-- New: Priority Level Dropdown -->
+        <div class="mb-3">
+          <label for="PriorityLevel" class="form-label">Priority Level *</label>
+          <select class="form-select" id="PriorityLevel" name="PriorityLevel" required>
+            <option value="">Select Priority</option>
+            <option value="High">High</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+
         <button type="submit" class="btn btn-primary w-100">Submit Recall</button>
       </form>
     </div>
@@ -95,18 +107,19 @@
 </div>
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="bold-and-bright.js"></script>
+
 <script>
-document.getElementById('importForm').addEventListener('submit', (e)=>{
-  const dateVal = document.getElementById('RecallDate').value;
-  if(dateVal){
+  // Frontend check: Prevent future dates
+  document.getElementById('importForm').addEventListener('submit', (e) => {
+    const dateVal = document.getElementById('RecallDate').value;
     const chosenDate = new Date(dateVal);
     const now = new Date();
-    if(chosenDate > now){
+    if (chosenDate > now) {
       e.preventDefault();
       alert("Recall date cannot be in the future!");
     }
-  }
-});
+  });
 </script>
 </body>
 </html>

@@ -1,8 +1,4 @@
 <!-- shortlist.html -->
-<!-- 
-  Currently only example checkboxes. 
-  In real usage, you might fetch from DB and let user mark 3-5 items to short-list.
--->
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -11,6 +7,7 @@
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
+
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
@@ -43,24 +40,8 @@
           <th>Priority</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Example rows. In production, fetch from DB and render checkboxes. -->
-        <tr>
-          <td><input type="checkbox" name="selectedRecalls" value="123"></td>
-          <td>123</td>
-          <td>Example Product</td>
-          <td>2025-01-15</td>
-          <td>Toy</td>
-          <td>High</td>
-        </tr>
-        <tr>
-          <td><input type="checkbox" name="selectedRecalls" value="124"></td>
-          <td>124</td>
-          <td>Another Product</td>
-          <td>2025-02-20</td>
-          <td>Electronic</td>
-          <td>Medium</td>
-        </tr>
+      <tbody id="shortlistTableBody">
+        <!-- Dynamically populated rows -->
       </tbody>
     </table>
     <button type="submit" id="shortlistBtn" class="btn btn-primary" disabled>Shortlist Selected</button>
@@ -68,22 +49,40 @@
 </div>
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="bold-and-bright.js"></script>
 <script>
-  // Enable the "Shortlist Selected" button only if user checks 3-5 items
-  const checkboxes = document.querySelectorAll('input[name="selectedRecalls"]');
-  const btn = document.getElementById('shortlistBtn');
+  // Load data from /api/recalls
+  fetch('/api/recalls')
+    .then(response => response.json())
+    .then(data => {
+      const tableBody = document.getElementById('shortlistTableBody');
+      data.forEach(recall => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input type="checkbox" name="selectedRecalls" value="${recall.RecallID}"></td>
+          <td>${recall.RecallID}</td>
+          <td>${recall.Title || ''}</td>
+          <td>${recall.RecallDate ? recall.RecallDate.slice(0,10) : ''}</td>
+          <td>${recall.CategoryID || ''}</td>
+          <td>${recall.PriorityLevel || ''}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
 
-  function updateButton(){
-    let count = 0;
-    checkboxes.forEach(cb => {
-      if(cb.checked) count++;
+      const checkboxes = document.querySelectorAll('input[name="selectedRecalls"]');
+      const submitBtn = document.getElementById('shortlistBtn');
+
+      function updateButtonState() {
+        const selected = document.querySelectorAll('input[name="selectedRecalls"]:checked');
+        submitBtn.disabled = !(selected.length >= 3 && selected.length <= 5);
+      }
+
+      checkboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
+    })
+    .catch(err => {
+      console.error("Failed to load recalls:", err);
     });
-    btn.disabled = !(count >= 3 && count <= 5);
-  }
-
-  checkboxes.forEach(cb => {
-    cb.addEventListener('change', updateButton);
-  });
 </script>
+
 </body>
 </html>

@@ -3,7 +3,7 @@
  * 
  * Automated recall importer with high-priority email alerts.
  * 1) Fetch JSON data from official CPSC endpoint
- * 2) Insert into PostgreSQL "recalls" table
+ * 2) Insert into Azure PostgreSQL "recalls" table
  * 3) Send email alert if priority = High
  */
 
@@ -11,14 +11,14 @@ const axios = require('axios');
 const { Pool } = require('pg');
 const nodemailer = require('nodemailer');
 
-// Configure PostgreSQL
+// Configure PostgreSQL (Azure)
 const pool = new Pool({
-  user: process.env.DB_USER || 'your_pg_user',
-  host: process.env.DB_HOST || 'your_pg_host',
-  database: process.env.DB_NAME || 'your_pg_database',
-  password: process.env.DB_PASS || 'your_pg_password',
+  user: 'admin1',
+  host: 'team6.postgres.database.azure.com',
+  database: 'team6',
+  password: 'BIT4454!',
   port: 5432,
-  ssl: false
+  ssl: { rejectUnauthorized: false }
 });
 
 // Configure email transport
@@ -35,7 +35,6 @@ const transporter = nodemailer.createTransport({
  */
 async function sendHighPriorityEmail(recall) {
   const subject = `🚨 New High-Priority Recall: ${recall.Name} – ${recall.Description.slice(0, 40)}...`;
-
   const htmlContent = `
     <h2>🚨 High-Priority Recall Imported</h2>
     <p><strong>Product:</strong> ${recall.Name}</p>
@@ -61,7 +60,7 @@ async function sendHighPriorityEmail(recall) {
 }
 
 /**
- * Main function to import recalls from the CPSC JSON feed
+ * Main function to import recalls from the official CPSC JSON feed
  */
 async function importRecalls() {
   try {
@@ -69,7 +68,7 @@ async function importRecalls() {
     let count = 0;
 
     for (const item of data) {
-      // Example logic: only keep recalls from 2023 onwards
+      // Basic filter: only keep recalls from 2023 onwards
       if (!item.RecallDate || parseInt(item.RecallDate.slice(0, 4)) < 2023) continue;
 
       const recallID = item.RecallID.toString();
@@ -78,14 +77,13 @@ async function importRecalls() {
       const exists = await pool.query('SELECT 1 FROM recalls WHERE "RecallID" = $1', [recallID]);
       if (exists.rows.length > 0) continue;
 
-      // Get product info from the first item in "Products" array
+      // Product info from first item in "Products" array
       const product = item.Products?.[0] || {};
       const NumberOfUnits = parseInt((product.NumberOfUnits || '0').replace(/[^\d]/g, '')) || 0;
 
-      // Priority
+      // Priority: default to Low if not explicitly 'high'
       const priority = item.PriorityLevel?.toLowerCase() === 'high' ? 'High' : 'Low';
 
-      // Insert into "recalls" table
       await pool.query(`
         INSERT INTO recalls (
           "RecallID",
@@ -125,7 +123,6 @@ async function importRecalls() {
       count++;
 
       if (priority === 'High') {
-        // Send email alert
         await sendHighPriorityEmail({
           RecallID: recallID,
           Name: product.Name || '(Unknown)',
