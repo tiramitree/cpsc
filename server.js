@@ -23,12 +23,12 @@ console.log('🔍 POSTGRES_CONN_STRING:', process.env.POSTGRES_CONN_STRING);
 
 // === DB Connection ===
 const pool = new Pool({
-host: 'team6.postgres.database.azure.com',
-user: 'admin1',
-password: 'BIT4454!',
-database: 'Recalls',
-port: 5432,
-ssl: { rejectUnauthorized: false }
+  host: 'team6.postgres.database.azure.com',
+  user: 'admin1',
+  password: 'BIT4454!',
+  database: 'Recalls',
+  port: 5432,
+  ssl: { rejectUnauthorized: false }
 });
 
 // === Middleware ===
@@ -72,6 +72,78 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 // === API Routes ===
+// === Import Recall Endpoint ===
+app.post('/api/import', async (req, res) => {
+  const {
+    Recall_ID,
+    Recall_Number,
+    Recall_Date,
+    Product_Name,
+    Product_Type,
+    Category,
+    Priority_Status,
+    URL
+  } = req.body;
+
+  if (!Recall_ID || !Recall_Number || !Recall_Date || !Product_Name || !Product_Type ||
+      !Category || !Priority_Status || !URL) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  if (new Date(Recall_Date) > new Date()) {
+    return res.status(400).json({ error: 'Recall date cannot be in the future.' });
+  }
+
+  try {
+    await pool.query(`
+      INSERT INTO public."Recalls" 
+      ("Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL", "ShortlistedFlag")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, FALSE)
+    `, [
+      Recall_ID,
+      Recall_Number,
+      Recall_Date,
+      Product_Name,
+      Product_Type,
+      Category,
+      Priority_Status,
+      URL
+    ]);
+
+    res.json({ message: 'Recall imported successfully' });
+  } catch (err) {
+    console.error('[IMPORT ERROR]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// === Shortlist Selected Recalls ===
+app.post('/api/shortlist', async (req, res) => {
+  const selectedRecalls = req.body.selectedRecalls;
+  if (!Array.isArray(selectedRecalls) || selectedRecalls.length < 3 || selectedRecalls.length > 5) {
+    return res.status(400).json({ error: 'You must select 3 to 5 recalls.' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const id of selectedRecalls) {
+      await client.query(`
+        UPDATE public."Recalls"
+        SET "ShortlistedFlag" = TRUE
+        WHERE "Recall_ID" = $1
+      `, [id]);
+    }
+    await client.query('COMMIT');
+    res.json({ message: 'Recalls successfully shortlisted' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 app.get('/api/recalls', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -136,6 +208,6 @@ app.get('/api/db-check', async (req, res) => {
 });
 
 // === Start Server ===
-app.listen(PORT,() => {
+app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });

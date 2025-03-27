@@ -1,93 +1,82 @@
-<!-- shortlist.html (字段改为实际数据库字段名，并添加 URL 与无数据提示) -->
+<!-- shortlist.html -->
 <!DOCTYPE html>
-<html data-bs-theme="light" lang="en">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Shortlist Recalls</title>
-  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css" />
 </head>
 <body>
-
-<nav class="navbar navbar-expand-md navbar-light bg-light">
-  <div class="container">
-    <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-            aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="recalls.html">Recalls</a></li>
-        <li class="nav-item"><a class="nav-link" href="import-recalls.html">Import</a></li>
-        <li class="nav-item"><a class="nav-link active" href="shortlist.html">Shortlist</a></li>
-      </ul>
-    </div>
+  <div class="container mt-4">
+    <h2>Shortlist Recalls</h2>
+    <form id="shortlistForm">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Recall ID</th>
+            <th>Recall Number</th>
+            <th>Date</th>
+            <th>Product Name</th>
+            <th>Product Type</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody id="shortlistTableBody"></tbody>
+      </table>
+      <button type="submit" class="btn btn-primary" id="shortlistBtn" disabled>Shortlist Selected</button>
+    </form>
   </div>
-</nav>
 
-<div class="container mt-4">
-  <h2>Shortlist Recalls</h2>
-  <form id="shortlistForm" method="POST" action="/api/shortlist">
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Select</th>
-          <th>Recall ID</th>
-          <th>Product Name</th>
-          <th>Recall Date</th>
-          <th>Category</th>
-          <th>Priority Status</th>
-          <th>URL</th>
-        </tr>
-      </thead>
-      <tbody id="shortlistTableBody">
-        <!-- Dynamically populated rows -->
-      </tbody>
-    </table>
-    <button type="submit" id="shortlistBtn" class="btn btn-primary" disabled>Shortlist Selected</button>
-  </form>
-</div>
+  <script>
+    fetch('/api/recalls')
+      .then(res => res.json())
+      .then(data => {
+        const table = document.getElementById("shortlistTableBody");
+        data.forEach(r => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><input type="checkbox" value="${r.Recall_ID}" name="selectedRecalls" ${r.ShortlistedFlag ? "disabled checked" : ""}></td>
+            <td>${r.Recall_ID}</td>
+            <td>${r.Recall_Number}</td>
+            <td>${r.Recall_Date.slice(0, 10)}</td>
+            <td>${r.Product_Name}</td>
+            <td>${r.Product_Type}</td>
+            <td>${r.Category}</td>
+            <td>${r.Priority_Status}</td>
+            <td><a href="${r.URL}" target="_blank">Link</a></td>
+          `;
+          if (r.ShortlistedFlag) row.classList.add("table-success");
+          table.appendChild(row);
+        });
 
-<script src="assets/bootstrap/js/bootstrap.min.js"></script>
-<script src="bold-and-bright.js"></script>
-<script>
-  fetch('/api/recalls')
-    .then(response => response.json())
-    .then(data => {
-      const tableBody = document.getElementById('shortlistTableBody');
-      if (!data.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No recall data available.</td></tr>';
-        return;
-      }
-      data.forEach(recall => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input type="checkbox" name="selectedRecalls" value="${recall.Recall_ID}"></td>
-          <td>${recall.Recall_ID}</td>
-          <td>${recall.Product_Name || ''}</td>
-          <td>${recall.Recall_Date ? recall.Recall_Date.slice(0,10) : ''}</td>
-          <td>${recall.Category || ''}</td>
-          <td>${recall.Priority_Status || ''}</td>
-          <td><a href="${recall.URL || '#'}" target="_blank">Link</a></td>
-        `;
-        tableBody.appendChild(tr);
+        document.querySelectorAll('input[name="selectedRecalls"]').forEach(cb => {
+          cb.addEventListener("change", () => {
+            const selected = document.querySelectorAll('input[name="selectedRecalls"]:checked:not(:disabled)').length;
+            document.getElementById("shortlistBtn").disabled = selected < 3 || selected > 5;
+          });
+        });
       });
 
-      const checkboxes = document.querySelectorAll('input[name="selectedRecalls"]');
-      const submitBtn = document.getElementById('shortlistBtn');
-
-      function updateButtonState() {
-        const selected = document.querySelectorAll('input[name="selectedRecalls"]:checked');
-        submitBtn.disabled = !(selected.length >= 3 && selected.length <= 5);
+    document.getElementById("shortlistForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const selected = Array.from(document.querySelectorAll('input[name="selectedRecalls"]:checked:not(:disabled)'))
+                            .map(cb => cb.value);
+      const res = await fetch("/api/shortlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedRecalls: selected }),
+      });
+      if (res.ok) {
+        alert("Recalls successfully shortlisted");
+        location.reload();
+      } else {
+        const err = await res.json();
+        alert("Error: " + err.error);
       }
-
-      checkboxes.forEach(cb => cb.addEventListener('change', updateButtonState));
-    })
-    .catch(err => {
-      console.error("Failed to load recalls:", err);
     });
-</script>
-
+  </script>
 </body>
 </html>
