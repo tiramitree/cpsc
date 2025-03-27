@@ -1,27 +1,35 @@
 /**
- * server.js (FINAL)
- * 
- * - Protects routes with session login
- * - Serves frontend from /public
- * - Connects to Azure PostgreSQL using env connection string
- * - Serves API endpoints for recalls list, shortlist, and BI reports
+ * server.js (UPDATED FINAL)
  */
 
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const { Pool } = require('pg');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// DB connection
+// === DB CONNECTION CONFIG ===
+const connectionString = process.env.POSTGRES_CONN_STRING;
+console.log("📦 DB Connection String =", connectionString?.split('@')[1]); // 只打印地址部分避免暴露密码
+
+let sslConfig = { rejectUnauthorized: false }; // fallback
+const certPath = path.join(__dirname, 'DigiCertGlobalRootCA.crt.pem');
+if (fs.existsSync(certPath)) {
+  sslConfig = {
+    ca: fs.readFileSync(certPath).toString(),
+    rejectUnauthorized: true
+  };
+}
+
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_CONN_STRING,
-  ssl: { rejectUnauthorized: false }
+  connectionString,
+  ssl: sslConfig
 });
 
-// Middleware
+// === Middleware ===
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -30,7 +38,7 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// Login endpoint
+// === Login endpoint ===
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   if (username === 'admin' && password === 'admin') {
@@ -41,16 +49,13 @@ app.post('/api/login', (req, res) => {
   }
 });
 
-// Public routes
+// === Public routes ===
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
+app.get('/', (req, res) => res.redirect('/login.html'));
 
-app.get('/', (req, res) => {
-  res.redirect('/login.html');
-});
-
-// Protect .html routes if not logged in
+// === HTML route protection ===
 app.use((req, res, next) => {
   const isPublic = req.path === '/login.html' || req.path === '/api/login';
   const isAsset = req.path.endsWith('.js') || req.path.endsWith('.css') || req.path.startsWith('/assets');
@@ -59,7 +64,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static files
+// === Static files ===
 app.use(express.static(path.join(__dirname, 'public')));
 
 // === API ROUTES ===
@@ -80,7 +85,7 @@ app.get('/api/recalls', async (req, res) => {
   }
 });
 
-// Accept selected recalls for shortlist
+// Accept selected recalls
 app.post('/api/shortlist', async (req, res) => {
   const ids = req.body.selectedRecalls || [];
   try {
@@ -157,7 +162,6 @@ app.get('/api/db-check', async (req, res) => {
     });
   }
 });
-
 
 // Start server
 app.listen(PORT, () => {

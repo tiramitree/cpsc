@@ -1,9 +1,21 @@
 const fs = require('fs');
+const path = require('path');
 const { Pool } = require('pg');
 
+const connectionString = process.env.POSTGRES_CONN_STRING;
+
+let sslConfig = { rejectUnauthorized: false };
+const certPath = path.join(__dirname, 'DigiCertGlobalRootCA.crt.pem');
+if (fs.existsSync(certPath)) {
+  sslConfig = {
+    ca: fs.readFileSync(certPath).toString(),
+    rejectUnauthorized: true
+  };
+}
+
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_CONN_STRING,
-  ssl: { rejectUnauthorized: false }
+  connectionString,
+  ssl: sslConfig
 });
 
 async function importRecalls() {
@@ -13,7 +25,7 @@ async function importRecalls() {
   } catch (err) {
     console.error('[IMPORT ERROR]', err.message);
   } finally {
-    await pool.end(); 
+    await pool.end();
   }
 }
 
