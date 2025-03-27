@@ -18,10 +18,8 @@ console.log('🔍 POSTGRES_CONN_STRING:', process.env.POSTGRES_CONN_STRING);
 
 // === DB Connection ===
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_CONN_STRING,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString: 'postgresql://admin1:BIT4454!@team6.postgres.database.azure.com:5432/Recalls',
+  ssl: { rejectUnauthorized: false }
 });
 
 // === Middleware ===

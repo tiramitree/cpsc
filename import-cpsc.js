@@ -14,9 +14,10 @@ if (fs.existsSync(certPath)) {
 }
 
 const pool = new Pool({
-  connectionString,
-  ssl: sslConfig
+  connectionString: 'postgresql://admin1:BIT4454!@team6.postgres.database.azure.com:5432/Recalls',
+  ssl: { rejectUnauthorized: false }
 });
+
 
 async function importRecalls() {
   try {
