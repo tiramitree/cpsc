@@ -4,6 +4,11 @@
  * - Serve frontend
  * - PostgreSQL via environment variable
  */
+process.on('uncaughtException', err => {
+  console.error('❌ Uncaught Exception:', err);
+});
+
+console.log('✅ App starting...');
 
 const express = require('express');
 const path = require('path');
