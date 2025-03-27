@@ -140,6 +140,25 @@ app.get('/api/reports/by-month', async (req, res) => {
   }
 });
 
+// === Test DB Connection ===
+app.get('/api/db-check', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({
+      success: true,
+      time: result.rows[0].now,
+      message: '✅ Connected to PostgreSQL successfully!'
+    });
+  } catch (err) {
+    console.error('[DB CHECK ERROR]', err);
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DB Connection Check</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🔍 Database Connection Test</h2>
+    <div id="result" class="alert" role="alert">Checking...</div>
+  </div>
+
+  <script>
+    fetch('/api/db-check')
+      .then(res => res.json())
+      .then(data => {
+        const resultDiv = document.getElementById('result');
+        if (data.success) {
+          resultDiv.className = 'alert alert-success';
+          resultDiv.innerText = data.message + `\nTime: ${data.time}`;
+        } else {
+          resultDiv.className = 'alert alert-danger';
+          resultDiv.innerText = '❌ Failed: ' + data.error;
+        }
+      })
+      .catch(err => {
+        const resultDiv = document.getElementById('result');
+        resultDiv.className = 'alert alert-danger';
+        resultDiv.innerText = '❌ Exception: ' + err.message;
+      });
+  </script>
+</body>
+</html>
