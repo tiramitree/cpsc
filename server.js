@@ -130,6 +130,6 @@ app.get('/api/db-check', async (req, res) => {
 });
 
 // === Start Server ===
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
   console.log(`✅ Server running at http://0.0.0.0:${PORT}`);
 });
