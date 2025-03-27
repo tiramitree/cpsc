@@ -23,10 +23,12 @@ console.log('🔍 POSTGRES_CONN_STRING:', process.env.POSTGRES_CONN_STRING);
 
 // === DB Connection ===
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_CONN_STRING,
-  ssl: {
-    rejectUnauthorized: false
-  }
+host: 'team6.postgres.database.azure.com',
+user: 'admin1',
+password: 'BIT4454!',
+database: 'Recalls',
+port: 5432,
+ssl: { rejectUnauthorized: false }
 });
 
 // === Middleware ===
@@ -75,7 +77,7 @@ app.get('/api/recalls', async (req, res) => {
     const result = await pool.query(`
       SELECT "Recall_ID", "Recall_Number", "Recall_Date",
              "Product_Name", "Product_Type", "Category", "Priority_Status", "URL"
-      FROM recalls ORDER BY "Recall_Date" DESC LIMIT 100
+      FROM public."Recalls" ORDER BY "Recall_Date" DESC LIMIT 100;
     `);
     console.log(`[DB] Loaded ${result.rows.length} rows`);
     res.json(result.rows);
@@ -134,6 +136,6 @@ app.get('/api/db-check', async (req, res) => {
 });
 
 // === Start Server ===
-app.listen(PORT, '0.0.0.0',() => {
-  console.log(`✅ Server running at http://0.0.0.0:${PORT}`);
+app.listen(PORT,() => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
