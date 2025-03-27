@@ -116,7 +116,7 @@ app.post('/api/import', async (req, res) => {
   }
 });
 
-
+/**
 // === Shortlist Selected Recalls ===
 app.post('/api/shortlist', async (req, res) => {
   const selectedRecalls = req.body.selectedRecalls;
@@ -143,7 +143,7 @@ app.post('/api/shortlist', async (req, res) => {
     client.release();
   }
 });
-
+**/
 app.get('/api/recalls', async (req, res) => {
   try {
     const result = await pool.query(`
