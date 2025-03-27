@@ -1,42 +1,46 @@
-<!-- import-recalls.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Import Recall</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <meta charset="UTF-8">
+  <title>Manual Recall Entry</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <script>
     function validateForm() {
-      const fields = ["Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL"];
-      let valid = true;
+      const fields = ["Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "URL"];
+      let isValid = true;
+
       for (let id of fields) {
-        if (!document.getElementById(id).value.trim()) {
-          valid = false;
+        const val = document.getElementById(id).value.trim();
+        if (!val) {
+          isValid = false;
           break;
         }
       }
-      const date = new Date(document.getElementById("Recall_Date").value);
-      if (date > new Date()) valid = false;
-      document.getElementById("submitBtn").disabled = !valid;
+
+      const recallDate = new Date(document.getElementById("Recall_Date").value);
+      const today = new Date();
+      if (recallDate > today) isValid = false;
+
+      document.getElementById("submitBtn").disabled = !isValid;
     }
 
     async function handleSubmit(e) {
       e.preventDefault();
+
       const data = {
-        Recall_ID: document.getElementById("Recall_ID").value,
-        Recall_Number: document.getElementById("Recall_Number").value,
-        Recall_Date: document.getElementById("Recall_Date").value,
-        Product_Name: document.getElementById("Product_Name").value,
-        Product_Type: document.getElementById("Product_Type").value,
-        Category: document.getElementById("Category").value,
-        Priority_Status: document.getElementById("Priority_Status").value,
-        URL: document.getElementById("URL").value,
+        Recall_ID: document.getElementById("Recall_ID").value.trim(),
+        Recall_Number: document.getElementById("Recall_Number").value.trim(),
+        Recall_Date: document.getElementById("Recall_Date").value.trim(),
+        Product_Name: document.getElementById("Product_Name").value.trim(),
+        Product_Type: document.getElementById("Product_Type").value.trim(),
+        Category: document.getElementById("Category").value.trim(),
+        URL: document.getElementById("URL").value.trim()
       };
 
       const res = await fetch("/api/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
 
       if (res.ok) {
@@ -50,22 +54,37 @@
   </script>
 </head>
 <body class="container mt-5">
-  <h2>Import Recall</h2>
+  <h2>Manual Recall Entry</h2>
   <form onsubmit="handleSubmit(event)" oninput="validateForm()">
-    <input class="form-control mb-2" type="text" id="Recall_ID" placeholder="Recall ID" required />
-    <input class="form-control mb-2" type="text" id="Recall_Number" placeholder="Recall Number" required />
-    <input class="form-control mb-2" type="date" id="Recall_Date" required />
-    <input class="form-control mb-2" type="text" id="Product_Name" placeholder="Product Name" required />
-    <input class="form-control mb-2" type="text" id="Product_Type" placeholder="Product Type" required />
-    <input class="form-control mb-2" type="text" id="Category" placeholder="Category" required />
-    <select class="form-select mb-2" id="Priority_Status" required>
-      <option value="">Select Priority</option>
-      <option value="High">High</option>
-      <option value="Medium">Medium</option>
-      <option value="Low">Low</option>
-    </select>
-    <input class="form-control mb-2" type="url" id="URL" placeholder="URL" required />
-    <button class="btn btn-primary" type="submit" id="submitBtn" disabled>Submit</button>
+    <div class="mb-3">
+      <label for="Recall_ID" class="form-label">Recall ID</label>
+      <input type="text" class="form-control" id="Recall_ID" required>
+    </div>
+    <div class="mb-3">
+      <label for="Recall_Number" class="form-label">Recall Number</label>
+      <input type="text" class="form-control" id="Recall_Number" required>
+    </div>
+    <div class="mb-3">
+      <label for="Recall_Date" class="form-label">Recall Date</label>
+      <input type="date" class="form-control" id="Recall_Date" required>
+    </div>
+    <div class="mb-3">
+      <label for="Product_Name" class="form-label">Product Name</label>
+      <input type="text" class="form-control" id="Product_Name" required>
+    </div>
+    <div class="mb-3">
+      <label for="Product_Type" class="form-label">Product Type</label>
+      <input type="text" class="form-control" id="Product_Type" required>
+    </div>
+    <div class="mb-3">
+      <label for="Category" class="form-label">Category</label>
+      <input type="text" class="form-control" id="Category" required>
+    </div>
+    <div class="mb-3">
+      <label for="URL" class="form-label">Recall URL</label>
+      <input type="url" class="form-control" id="URL" required>
+    </div>
+    <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
   </form>
 </body>
 </html>

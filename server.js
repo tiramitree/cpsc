@@ -81,12 +81,11 @@ app.post('/api/import', async (req, res) => {
     Product_Name,
     Product_Type,
     Category,
-    Priority_Status,
     URL
   } = req.body;
 
-  if (!Recall_ID || !Recall_Number || !Recall_Date || !Product_Name || !Product_Type ||
-      !Category || !Priority_Status || !URL) {
+  // 校验字段
+  if (!Recall_ID || !Recall_Number || !Recall_Date || !Product_Name || !Product_Type || !Category || !URL) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
@@ -98,7 +97,7 @@ app.post('/api/import', async (req, res) => {
     await pool.query(`
       INSERT INTO public."Recalls" 
       ("Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL", "ShortlistedFlag")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, FALSE)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE)
     `, [
       Recall_ID,
       Recall_Number,
@@ -106,16 +105,17 @@ app.post('/api/import', async (req, res) => {
       Product_Name,
       Product_Type,
       Category,
-      Priority_Status,
+      false,  // Priority_Status = false
       URL
     ]);
-
+  
     res.json({ message: 'Recall imported successfully' });
   } catch (err) {
     console.error('[IMPORT ERROR]', err);
     res.status(500).json({ error: err.message });
   }
-});
+  
+
 
 // === Shortlist Selected Recalls ===
 app.post('/api/shortlist', async (req, res) => {
@@ -130,7 +130,7 @@ app.post('/api/shortlist', async (req, res) => {
     for (const id of selectedRecalls) {
       await client.query(`
         UPDATE public."Recalls"
-        SET "ShortlistedFlag" = TRUE
+        SET "Priority_Status" = True
         WHERE "Recall_ID" = $1
       `, [id]);
     }
