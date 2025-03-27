@@ -96,8 +96,8 @@ app.post('/api/import', async (req, res) => {
   try {
     await pool.query(`
       INSERT INTO public."Recalls" 
-      ("Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL", "ShortlistedFlag")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE)
+      ("Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, [
       Recall_ID,
       Recall_Number,
