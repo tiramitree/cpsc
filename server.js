@@ -129,7 +129,7 @@ app.post('/api/shortlist', async (req, res) => {
     await client.query('BEGIN');
     for (const id of selectedRecalls) {
       await client.query(`
-        UPDATE public."Recalls"
+        FROM public."Recalls"
         SET "Priority_Status" = true
         WHERE "Recall_ID" = $1
       `, [id]);
@@ -164,7 +164,7 @@ app.get('/api/reports/category', async (req, res) => {
     const result = await pool.query(`
       SELECT "Category", COUNT(*) as count
       FROM public."Recalls" WHERE "Priority_Status" = 'true'
-      GROUP BY "Category" ORDER BY count DESC
+      GROUP BY "Category" ORDER BY count DESC;
     `);
     res.json(result.rows);
   } catch (err) {
@@ -175,8 +175,8 @@ app.get('/api/reports/category', async (req, res) => {
 app.get('/api/reports/product-type', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT "Product_Type", COUNT(*) as count
-      FROM public."Recalls" GROUP BY "Product_Type" ORDER BY count DESC
+      SELECT "Product_Type", COUNT(*) as count;
+      FROM public."Recalls" GROUP BY "Product_Type" ORDER BY count DESC;
     `);
     res.json(result.rows);
   } catch (err) {
@@ -188,8 +188,8 @@ app.get('/api/reports/by-month', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT TO_CHAR(DATE_TRUNC('month', "Recall_Date"), 'YYYY-MM') as month, COUNT(*) as count
-      FROM public."Recalls" WHERE "Priority_Status" = 'High'
-      GROUP BY month ORDER BY month
+      FROM public."Recalls" WHERE "Priority_Status" = 'true'
+      GROUP BY month ORDER BY month;
     `);
     res.json(result.rows);
   } catch (err) {
