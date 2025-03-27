@@ -122,19 +122,8 @@ app.get('/api/reports/by-month', async (req, res) => {
 // === DB Health Check Endpoint ===
 app.get('/api/db-check', async (req, res) => {
   try {
-    const dbResult = await pool.query('SELECT NOW()');
-    let googleStatus = 'Unknown';
-    try {
-      const googleRes = await fetch('https://www.google.com');
-      googleStatus = `✅ Google reachable, status: ${googleRes.status}`;
-    } catch (googleErr) {
-      googleStatus = `❌ Google unreachable: ${googleErr.message}`;
-    }
-    res.json({ 
-      success: true, 
-      time: dbResult.rows[0].now, 
-      message: googleStatus 
-    });
+    const result = await pool.query('SELECT NOW()');
+    res.json({ success: true, time: result.rows[0].now });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
