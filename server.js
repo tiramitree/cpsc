@@ -129,7 +129,7 @@ app.post('/api/shortlist', async (req, res) => {
     await client.query('BEGIN');
     for (const id of selectedRecalls) {
       await client.query(`
-        FROM public."Recalls"
+        UPDATE public."Recalls"
         SET "Priority_Status" = true
         WHERE "Recall_ID" = $1
       `, [id]);
@@ -163,7 +163,7 @@ app.get('/api/reports/category', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT "Category", COUNT(*) as count
-      FROM public."Recalls" WHERE "Priority_Status" = 'true'
+      FROM public."Recalls" WHERE "Priority_Status" = true
       GROUP BY "Category" ORDER BY count DESC;
     `);
     res.json(result.rows);
@@ -175,7 +175,7 @@ app.get('/api/reports/category', async (req, res) => {
 app.get('/api/reports/product-type', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT "Product_Type", COUNT(*) as count;
+      SELECT "Product_Type", COUNT(*) as count
       FROM public."Recalls" GROUP BY "Product_Type" ORDER BY count DESC;
     `);
     res.json(result.rows);
