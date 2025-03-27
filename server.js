@@ -105,7 +105,7 @@ app.post('/api/import', async (req, res) => {
       Product_Name,
       Product_Type,
       Category,
-      false,  // Priority_Status = false
+      false,  
       URL
     ]);
   
@@ -130,7 +130,7 @@ app.post('/api/shortlist', async (req, res) => {
     for (const id of selectedRecalls) {
       await client.query(`
         UPDATE public."Recalls"
-        SET "Priority_Status" = True
+        SET "Priority_Status" = true
         WHERE "Recall_ID" = $1
       `, [id]);
     }
@@ -163,7 +163,7 @@ app.get('/api/reports/category', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT "Category", COUNT(*) as count
-      FROM public."Recalls" WHERE "Priority_Status" = 'High'
+      FROM public."Recalls" WHERE "Priority_Status" = 'true'
       GROUP BY "Category" ORDER BY count DESC
     `);
     res.json(result.rows);
