@@ -9,6 +9,7 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const { Pool } = require('pg');
+const fetch = require('node-fetch');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -121,8 +122,19 @@ app.get('/api/reports/by-month', async (req, res) => {
 // === DB Health Check Endpoint ===
 app.get('/api/db-check', async (req, res) => {
   try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ success: true, time: result.rows[0].now });
+    const dbResult = await pool.query('SELECT NOW()');
+    let googleStatus = 'Unknown';
+    try {
+      const googleRes = await fetch('https://www.google.com');
+      googleStatus = `✅ Google reachable, status: ${googleRes.status}`;
+    } catch (googleErr) {
+      googleStatus = `❌ Google unreachable: ${googleErr.message}`;
+    }
+    res.json({ 
+      success: true, 
+      time: dbResult.rows[0].now, 
+      message: googleStatus 
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
