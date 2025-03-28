@@ -34,7 +34,8 @@
         Product_Name: document.getElementById("Product_Name").value.trim(),
         Product_Type: document.getElementById("Product_Type").value.trim(),
         Category: document.getElementById("Category").value.trim(),
-        URL: document.getElementById("URL").value.trim()
+        URL: document.getElementById("URL").value.trim(),
+        Manufacturer: document.getElementById("Manufacturer").value.trim()
       };
 
       const res = await fetch("/api/import", {
