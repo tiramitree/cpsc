@@ -81,11 +81,12 @@ app.post('/api/import', async (req, res) => {
     Product_Name,
     Product_Type,
     Category,
-    URL
+    URL,
+    manufacturer
   } = req.body;
 
   // 校验字段
-  if (!Recall_ID || !Recall_Number || !Recall_Date || !Product_Name || !Product_Type || !Category || !URL) {
+  if (!Recall_ID || !Recall_Number || !Recall_Date || !Product_Name || !Product_Type || !Category || !URL || !manufacturer) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
@@ -96,7 +97,7 @@ app.post('/api/import', async (req, res) => {
   try {
     await pool.query(`
       INSERT INTO public."Recalls" 
-      ("Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL")
+      ("Recall_ID", "Recall_Number", "Recall_Date", "Product_Name", "Product_Type", "Category", "Priority_Status", "URL", "manufacturer")
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     `, [
       Recall_ID,
@@ -106,7 +107,8 @@ app.post('/api/import', async (req, res) => {
       Product_Type,
       Category,
       false,  
-      URL
+      URL,
+      manufacturer
     ]);
   
     res.json({ message: 'Recall imported successfully' });
@@ -148,7 +150,7 @@ app.get('/api/recalls', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT "Recall_ID", "Recall_Number", "Recall_Date",
-             "Product_Name", "Product_Type", "Category", "Priority_Status", "URL"
+             "Product_Name", "Product_Type", "Category", "Priority_Status", "URL", "manufacturer"
       FROM public."Recalls" ORDER BY "Recall_Date" DESC LIMIT 100;
     `);
     console.log(`[DB] Loaded ${result.rows.length} rows`);

@@ -47,6 +47,7 @@
           <th>Category</th>
           <th>Priority</th>
           <th>URL</th>
+          <th>manufacturer</th>
         </tr>
       </thead>
       <tbody id="recallsTableBody">
@@ -84,6 +85,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         <td>${r.Category || ''}</td>
         <td>${r.Priority_Status || ''}</td>
         <td><a href="${r.URL || '#'}" target="_blank">Link</a></td>
+        <td>${r.manufacturer || ''}</td>
       `;
       tbody.appendChild(tr);
     });
