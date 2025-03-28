@@ -18,7 +18,7 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// === Debug: 输出连接字符串看是否读取成功 ===
+// === Debug ===
 console.log('🔍 POSTGRES_CONN_STRING:', process.env.POSTGRES_CONN_STRING);
 
 // === DB Connection ===
