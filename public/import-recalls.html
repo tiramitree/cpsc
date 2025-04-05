@@ -57,7 +57,7 @@
 <body class="container mt-5">
   <nav class="navbar navbar-expand-md navbar-light bg-light">
     <div class="container">
-      <a class="navbar-brand" href="index.html">CPSC Recall Management</a>
+      <a class="navbar-brand" id="dashboardLink" href="#">CPSC Dashboard</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
               data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
               aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,6 @@
       </div>
     </div>
   </nav>
-  
   <h2>Manual Recall Entry</h2>
   <form onsubmit="handleSubmit(event)" oninput="validateForm()">
     <div class="mb-3">
@@ -110,5 +109,30 @@
     </div>
     <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
   </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/api/session-info')
+        .then(res => res.json())
+        .then(data => {
+          const dashboardLink = document.getElementById('dashboardLink');
+          if (data.role === 'manager') {
+            dashboardLink.href = 'manager-dashboard.html';
+            dashboardLink.innerText = 'CPSC Manager Dashboard';
+          } else if (data.role === 'investigator') {
+            dashboardLink.href = 'investigator-dashboard.html';
+            dashboardLink.innerText = 'CPSC Investigator Dashboard';
+          } else {
+            dashboardLink.href = 'login.html';
+            dashboardLink.innerText = 'CPSC Dashboard';
+          }
+        })
+        .catch(err => {
+          console.error('cant loading session info', err);
+          window.location.href = 'login.html';
+        });
+    });
+  </script>
+
 </body>
 </html>

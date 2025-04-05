@@ -1,0 +1,96 @@
+<!-- public/import-listings.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manual Listings Import</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+<!-- We'll keep a simple nav; you can unify with your existing nav if needed -->
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" href="manager-dashboard.html">CPSC Manager Dashboard</a>
+    <!-- or Investigator Dashboard depends on user role, you can do dynamic session-check if you like -->
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h2>Manual Marketplace Listing Import</h2>
+  <form id="listForm">
+    <div class="mb-3">
+      <label class="form-label">Listing ID</label>
+      <input type="text" id="listing_id" class="form-control" required />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Product Name</label>
+      <input type="text" id="product_name" class="form-control" required />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Product ID (Optional)</label>
+      <input type="text" id="product_id" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Seller ID</label>
+      <input type="text" id="seller_id" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Platform (eBay, etc.)</label>
+      <input type="text" id="platform" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Category</label>
+      <input type="text" id="category" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Listing Date</label>
+      <input type="date" id="listing_date" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Price</label>
+      <input type="number" step="0.01" id="price" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">URL</label>
+      <input type="url" id="url" class="form-control" />
+    </div>
+    <button class="btn btn-primary" type="submit">Import Listing</button>
+  </form>
+</div>
+
+<script>
+document.getElementById('listForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    listing_id: document.getElementById('listing_id').value.trim(),
+    product_name: document.getElementById('product_name').value.trim(),
+    product_id: document.getElementById('product_id').value.trim(),
+    seller_id: document.getElementById('seller_id').value.trim(),
+    platform: document.getElementById('platform').value.trim(),
+    category: document.getElementById('category').value.trim(),
+    listing_date: document.getElementById('listing_date').value || null,
+    price: document.getElementById('price').value || null,
+    url: document.getElementById('url').value.trim()
+  };
+
+  try {
+    const resp = await fetch('/api/listings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      throw new Error('Failed to import listing');
+    }
+    const data = await resp.json();
+    alert(data.message || 'Listing inserted successfully');
+    e.target.reset();
+  } catch(err) {
+    console.error(err);
+    alert(err.message);
+  }
+});
+</script>
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+</body>
+</html>

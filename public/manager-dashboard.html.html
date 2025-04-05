@@ -1,0 +1,116 @@
+<!-- manager-dashboard.html -->
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <title>Manager Dashboard - CPSC Recall Management System</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+</head>
+<body>
+
+<!-- Navbar with Manager functionalities -->
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" id="dashboardLink" href="#">CPSC Dashboard</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="recalls.html">Recalls</a></li>
+        <li class="nav-item"><a class="nav-link" href="import-recalls.html">Import Recalls</a></li>
+        <li class="nav-item"><a class="nav-link" href="shortlist.html">Shortlist</a></li>
+        <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<!-- Manager Welcome Section -->
+<section class="py-5 bg-light">
+  <div class="container text-center">
+    <h1 class="mb-4">Welcome Manager</h1>
+    <p class="fs-5">
+      Manage recalls, import data, shortlist high-priority cases, and monitor compliance effectively.
+    </p>
+    <h5 id="managerName" class="text-muted"></h5>
+    <div class="text-center mt-4">
+      <img src="assets/img/brands/cpsc_logo_text.png" alt="CPSC Logo" style="max-width:200px;">
+    </div>
+  </div>
+</section>
+
+<!-- Manager Features Highlight -->
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card p-3">
+          <h4>Automated Data Import</h4>
+          <p>Fetch recall data from the official CPSC API, ensuring your system stays updated.</p>
+          <a class="btn btn-primary mt-2" href="import-recalls.html">Import Recalls</a>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card p-3">
+          <h4>Shortlist High-Priority</h4>
+          <p>Select and manage recalls that require immediate investigator attention.</p>
+          <a class="btn btn-primary mt-2" href="shortlist.html">Manage Shortlist</a>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card p-3">
+          <h4>Reports & Analytics</h4>
+          <p>Visualize recall trends and identify critical categories quickly and effectively.</p>
+          <a class="btn btn-primary mt-2" href="external-report.html">View Reports</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script src="bold-and-bright.js"></script>
+
+<script>
+  // Fetch session information and display manager's name
+  fetch('/api/session-info')
+    .then(res => res.json())
+    .then(data => {
+      if (data.name) {
+        document.getElementById("managerName").innerText = "Logged in as: " + data.name;
+      }
+    })
+    .catch(err => console.error('Failed to fetch session info:', err));
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/api/session-info')
+      .then(res => res.json())
+      .then(data => {
+        const dashboardLink = document.getElementById('dashboardLink');
+        if (data.role === 'manager') {
+          dashboardLink.href = 'manager-dashboard.html';
+          dashboardLink.innerText = 'CPSC Manager Dashboard';
+        } else if (data.role === 'investigator') {
+          dashboardLink.href = 'investigator-dashboard.html';
+          dashboardLink.innerText = 'CPSC Investigator Dashboard';
+        } else {
+          dashboardLink.href = 'login.html';
+          dashboardLink.innerText = 'CPSC Dashboard';
+        }
+      })
+      .catch(err => {
+        console.error('cant loading session info', err);
+        window.location.href = 'login.html';
+      });
+  });
+</script>
+
+</body>
+</html>

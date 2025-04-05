@@ -1,8 +1,4 @@
 <!-- login.html -->
-<!-- 
-  CPSC Secure Login Page - admin/admin required
--->
-
 <!DOCTYPE html>
 <html data-bs-theme="light" lang="en">
 <head>
@@ -15,13 +11,16 @@
   <div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 100vh;">
     <div class="row w-100">
       <div class="col-md-6 col-lg-5 mx-auto shadow p-4 rounded bg-white">
-        <h2 class="mb-3 text-center text-primary">CPSC Admin Login</h2>
+        <h2 class="mb-3 text-center text-primary">CPSC Secure Login</h2>
         <p class="text-center text-muted mb-4">Please enter your credentials to access the recall management system.</p>
 
-        <!-- Error message -->
+        <!-- General Error Message -->
         <div id="errorMsg" class="alert alert-danger d-none">Invalid login. Please try again.</div>
 
-        <!-- Login form -->
+        <!-- Unauthorized Error Message -->
+        <div id="unauthMsg" class="alert alert-warning d-none">Unauthorized role or access denied.</div>
+
+        <!-- Login Form -->
         <form id="loginForm" method="POST" action="/api/login">
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
@@ -35,7 +34,7 @@
         </form>
 
         <div class="mt-3 text-center text-muted">
-          <small>Only valid credentials will be accepted.</small>
+          <small>Only valid credentials with proper authorization will be accepted.</small>
         </div>
       </div>
     </div>
@@ -45,10 +44,12 @@
   <script src="bold-and-bright.js"></script>
 
   <script>
-    // If redirected with ?error=true, show error message
-    if (window.location.search.includes("error=true")) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'true') {
       document.getElementById("errorMsg").classList.remove("d-none");
+    } else if (params.get('error') === 'unauthorized') {
+      document.getElementById("unauthMsg").classList.remove("d-none");
     }
   </script>
-</body>                                                                                                          
+</body>
 </html>
