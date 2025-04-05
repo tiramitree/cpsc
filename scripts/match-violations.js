@@ -1,5 +1,5 @@
 // match-violations.js
-const pool = require('../config/db');
+const pool = require('./config/db'); 
 
 async function matchViolations() {
   console.log('[match-violations] Starting...');
