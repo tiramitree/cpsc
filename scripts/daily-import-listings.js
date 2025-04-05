@@ -2,7 +2,8 @@
 // For daily scheduled import from eBay (or other) APIs
 // in synergy with server.js, but no changes to server.js are required
 
-const pool = require('./db'); // same connection
+const pool = require('../config/db');
+ // same connection
 
 async function fetchFromEbayAPI() {
   // TODO: Implement real eBay call

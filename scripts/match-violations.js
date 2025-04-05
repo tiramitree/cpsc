@@ -1,13 +1,5 @@
 // match-violations.js
-const { Pool } = require('pg');
-const pool = new Pool({
-  host: 'team6.postgres.database.azure.com',
-  user: 'admin1',
-  password: 'BIT4454!',
-  database: 'Recalls',
-  port: 5432,
-  ssl: { rejectUnauthorized: false }
-});
+const pool = require('../config/db');
 
 async function matchViolations() {
   console.log('[match-violations] Starting...');

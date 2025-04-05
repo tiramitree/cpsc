@@ -16,7 +16,7 @@ console.log('✅ App starting...');
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const pool = require('./db'); // <--- import from db.js
+const pool = require('../config/db');// <--- import from db.js
 
 const app = express();
 const PORT = process.env.PORT || 8080;
