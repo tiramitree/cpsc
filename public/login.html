@@ -46,25 +46,28 @@
   <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+  
       const formData = new FormData(e.target);
+      const username = formData.get('username');
+      const password = formData.get('password');
+  
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.get('username'),
-          password: formData.get('password')
-        })
+        body: JSON.stringify({ username, password })
       });
   
       const result = await response.json();
+  
       if (result.success) {
         localStorage.setItem('cpsc_user', JSON.stringify(result));
+  
         if (result.role === 'Manager') {
           window.location.href = 'manager-dashboard.html';
         } else if (result.role === 'Investigator') {
           window.location.href = 'investigator-dashboard.html';
         } else {
-          alert('Unknown role.');
+          alert('Unknown role');
         }
       } else {
         alert(result.error || 'Login failed');

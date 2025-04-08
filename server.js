@@ -52,14 +52,17 @@ app.post('/api/login', async (req, res) => {
         role: user.Role,
         username: user.Username
       });
+
     } else {
       return res.json({ success: false, error: 'Invalid credentials' });
     }
+
   } catch (err) {
     console.error('[LOGIN ERROR]', err);
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
+
 
 
 // === Auth Protection (existing) ===
