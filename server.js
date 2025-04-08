@@ -173,10 +173,8 @@ app.get('/api/db-check', async (req, res) => {
   }
 });
 
-// === NEW: Listings & Violations APIs ===
 
-
-// GET /api/violations
+// === 5) Violations Endpoints
 app.get('/api/violations', async (req, res) => {
   try {
     const sql = `
@@ -191,11 +189,10 @@ app.get('/api/violations', async (req, res) => {
     return res.json(result.rows);
   } catch (err) {
     console.error('[GET /api/violations ERROR]', err);
-    return res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// PATCH /api/violations/:id
 app.patch('/api/violations/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -211,13 +208,70 @@ app.patch('/api/violations/:id', async (req, res) => {
           "alert_sent" = CASE WHEN $1='True Positive' THEN true ELSE false END,
           "alert_type" = CASE WHEN $1='True Positive' THEN 'High Risk Seller' ELSE null END,
           "alert_sent_date" = CASE WHEN $1='True Positive' THEN NOW() ELSE null END
-      WHERE "violation_id" = $3
-    `, [ outcome, investigator_name || null, id ]);
+      WHERE "violation_id" = $2
+    `, [ outcome, id ]);
 
-    return res.json({ message: 'Violation annotated successfully' });
+    res.json({ message: 'Violation annotated successfully' });
   } catch (err) {
     console.error('[PATCH /api/violations/:id ERROR]', err);
-    return res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// === 6) Manual Run-Matching Endpoint (No separate match-violations.js needed)
+async function runMatchingNow() {
+  // Load Recalls
+  const recallRes = await pool.query(`
+    SELECT "Recall_ID","Product_Name","Category"
+    FROM public."Recalls"
+    ORDER BY "Recall_Date" DESC
+    LIMIT 500
+  `);
+  const recalls = recallRes.rows;
+
+  // Load recent Listings
+  const listRes = await pool.query(`
+    SELECT "listing_id","product_name","category"
+    FROM public."Listings"
+    WHERE "listing_date" >= NOW() - interval '30 days'
+  `);
+  const listings = listRes.rows;
+
+  let inserted = 0;
+  for (const listing of listings) {
+    for (const recall of recalls) {
+      const sameCategory = listing.category?.toLowerCase() === recall.Category?.toLowerCase();
+      const nameMatch = listing.product_name?.toLowerCase().includes(
+        recall.Product_Name?.toLowerCase()
+      );
+      if (sameCategory && nameMatch) {
+        // check if already in Violations
+        const existing = await pool.query(`
+          SELECT 1 FROM public."Violations"
+          WHERE "listing_id" = $1 AND "recall_id" = $2
+        `, [listing.listing_id, recall.Recall_ID]);
+
+        if (existing.rowCount === 0) {
+          await pool.query(`
+            INSERT INTO public."Violations"
+            ("listing_id","recall_id","date_flagged","violation_outcome","alert_sent")
+            VALUES ($1, $2, CURRENT_DATE, 'Pending', false)
+          `, [listing.listing_id, recall.Recall_ID]);
+          inserted++;
+        }
+      }
+    }
+  }
+  return inserted;
+}
+
+app.post('/api/run-matching', async (req, res) => {
+  try {
+    const count = await runMatchingNow();
+    return res.json({ success: true, inserted: count });
+  } catch (err) {
+    console.error('[RUN MATCHING ERROR]', err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
