@@ -1,5 +1,5 @@
 // match-violations.js
-const pool = require('./config/db'); 
+const pool = require('../config/db'); 
 
 async function matchViolations() {
   console.log('[match-violations] Starting...');
@@ -38,9 +38,9 @@ async function matchViolations() {
             if (check.rowCount === 0) {
               await pool.query(`
                 INSERT INTO public."Violations"
-                ("listing_id","date_flagged","violation_outcome")
-                VALUES ($1, CURRENT_DATE, 'Pending')
-              `, [listing.listing_id]);
+                ("listing_id","recall_id","date_flagged","violation_outcome")
+                VALUES ($1, $2, CURRENT_DATE, 'Pending')
+              `, [listing.listing_id, recall.Recall_ID]);              
               inserted++;
             }
           }

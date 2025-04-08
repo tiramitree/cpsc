@@ -33,16 +33,6 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// === Login Endpoint (existing) ===
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'admin' && password === 'admin') {
-    req.session.loggedIn = true;
-    res.redirect('/index.html');
-  } else {
-    res.redirect('/login.html?error=true');
-  }
-});
 
 // === Public Routes (existing) ===
 app.post('/api/login', async (req, res) => {
@@ -291,6 +281,31 @@ app.patch('/api/violations/:id', async (req, res) => {
     console.error('[PATCH /api/violations/:id ERROR]', err);
     return res.status(500).json({ error: err.message });
   }
+});
+
+app.get('/oauth-callback', async (req, res) => {
+  const code = req.query.code;
+
+  if (!code) {
+    return res.status(400).send('Missing code parameter');
+  }
+
+  const params = new URLSearchParams();
+  params.append('grant_type', 'authorization_code');
+  params.append('code', code);
+  params.append('redirect_uri', 'https://cpscgroup6-anc6crgvgmhkayad.canadacentral-01.azurewebsites.net/oauth-callback');
+
+  const response = await fetch('https://api.sandbox.ebay.com/identity/v1/oauth2/token', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + Buffer.from(process.env.EBAY_CLIENT_ID + ':' + process.env.EBAY_CLIENT_SECRET).toString('base64'),
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params
+  });
+
+  const data = await response.json();
+  res.send(data);
 });
 
 // === Start Server (existing) ===

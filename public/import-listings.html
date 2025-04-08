@@ -1,96 +1,115 @@
-<!-- public/import-listings.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Manual Listings Import</title>
-  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Import Marketplace Listing</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<!-- We'll keep a simple nav; you can unify with your existing nav if needed -->
-<nav class="navbar navbar-expand-md navbar-light bg-light">
-  <div class="container">
-    <a class="navbar-brand" href="manager-dashboard.html">CPSC Manager Dashboard</a>
-    <!-- or Investigator Dashboard depends on user role, you can do dynamic session-check if you like -->
-  </div>
-</nav>
+<body class="container mt-5">
+  <h2 class="mb-4">Manual Listing Import</h2>
 
-<div class="container mt-4">
-  <h2>Manual Marketplace Listing Import</h2>
-  <form id="listForm">
+  <form id="listingForm">
     <div class="mb-3">
-      <label class="form-label">Listing ID</label>
-      <input type="text" id="listing_id" class="form-control" required />
+      <label for="listing_id" class="form-label">Listing ID</label>
+      <input type="text" class="form-control" id="listing_id" required />
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Product Name</label>
-      <input type="text" id="product_name" class="form-control" required />
+      <label for="seller_id" class="form-label">Seller ID</label>
+      <input type="text" class="form-control" id="seller_id" required />
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Product ID (Optional)</label>
-      <input type="text" id="product_id" class="form-control" />
+      <label for="product_name" class="form-label">Product Name</label>
+      <input type="text" class="form-control" id="product_name" required />
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Seller ID</label>
-      <input type="text" id="seller_id" class="form-control" />
+      <label for="marketplace_id" class="form-label">Marketplace</label>
+      <select class="form-select" id="marketplace_id" required>
+        <option value="">Select Marketplace</option>
+        <option value="eBay">eBay</option>
+        <option value="Amazon">Amazon</option>
+        <option value="Walmart">Walmart</option>
+      </select>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Platform (eBay, etc.)</label>
-      <input type="text" id="platform" class="form-control" />
+      <label for="listing_date" class="form-label">Listing Date</label>
+      <input type="date" class="form-control" id="listing_date" required />
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Category</label>
-      <input type="text" id="category" class="form-control" />
+      <label for="contact" class="form-label">Contact (email or phone)</label>
+      <input type="text" class="form-control" id="contact" required />
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Listing Date</label>
-      <input type="date" id="listing_date" class="form-control" />
+      <label for="category" class="form-label">Category</label>
+      <select class="form-select" id="category" required>
+        <option value="">Select Category</option>
+        <option value="Toys">Toys</option>
+        <option value="Electronics">Electronics</option>
+        <option value="Clothing">Clothing</option>
+        <option value="Home">Home</option>
+      </select>
     </div>
+
     <div class="mb-3">
-      <label class="form-label">Price</label>
-      <input type="number" step="0.01" id="price" class="form-control" />
+      <label for="url" class="form-label">Listing URL</label>
+      <input type="url" class="form-control" id="url" required pattern="https?://.*" />
     </div>
-    <div class="mb-3">
-      <label class="form-label">URL</label>
-      <input type="url" id="url" class="form-control" />
-    </div>
-    <button class="btn btn-primary" type="submit">Import Listing</button>
+
+    <button type="submit" class="btn btn-primary">Submit Listing</button>
   </form>
-</div>
 
-<script>
-document.getElementById('listForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const payload = {
-    listing_id: document.getElementById('listing_id').value.trim(),
-    product_name: document.getElementById('product_name').value.trim(),
-    product_id: document.getElementById('product_id').value.trim(),
-    seller_id: document.getElementById('seller_id').value.trim(),
-    platform: document.getElementById('platform').value.trim(),
-    category: document.getElementById('category').value.trim(),
-    listing_date: document.getElementById('listing_date').value || null,
-    price: document.getElementById('price').value || null,
-    url: document.getElementById('url').value.trim()
-  };
+  <div id="message" class="mt-3"></div>
 
-  try {
-    const resp = await fetch('/api/listings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+  <script>
+    document.getElementById('listingForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const listing_date = new Date(document.getElementById('listing_date').value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (listing_date > today) {
+        alert('Listing Date cannot be in the future.');
+        return;
+      }
+
+      const data = {
+        listing_id: document.getElementById('listing_id').value.trim(),
+        seller_id: document.getElementById('seller_id').value.trim(),
+        product_name: document.getElementById('product_name').value.trim(),
+        marketplace_id: document.getElementById('marketplace_id').value,
+        listing_date: document.getElementById('listing_date').value,
+        contact: document.getElementById('contact').value.trim(),
+        category: document.getElementById('category').value,
+        url: document.getElementById('url').value.trim()
+      };
+
+      try {
+        const response = await fetch('/api/import-listing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        const messageEl = document.getElementById('message');
+        if (response.ok) {
+          messageEl.innerHTML = `<div class="alert alert-success">Listing successfully imported!</div>`;
+          document.getElementById('listingForm').reset();
+        } else {
+          messageEl.innerHTML = `<div class="alert alert-danger">${result.error || 'Submission failed.'}</div>`;
+        }
+      } catch (err) {
+        alert('Error submitting listing: ' + err.message);
+      }
     });
-    if (!resp.ok) {
-      throw new Error('Failed to import listing');
-    }
-    const data = await resp.json();
-    alert(data.message || 'Listing inserted successfully');
-    e.target.reset();
-  } catch(err) {
-    console.error(err);
-    alert(err.message);
-  }
-});
-</script>
-<script src="assets/bootstrap/js/bootstrap.min.js"></script>
+  </script>
 </body>
 </html>

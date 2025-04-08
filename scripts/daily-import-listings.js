@@ -2,26 +2,37 @@
 // For daily scheduled import from eBay (or other) APIs
 // in synergy with server.js, but no changes to server.js are required
 
-const pool = require('./config/db'); 
+const pool = require('../config/db'); 
  // same connection
 
-async function fetchFromEbayAPI() {
-  // TODO: Implement real eBay call
-  // currently a dummy example
-  return [
-    {
-      listing_id: 'FAKE_EBAY_1001',
-      product_name: 'Dummy eBay Product from daily script',
-      product_id: null,
-      seller_id: 'ebay_seller_999',
-      platform: 'eBay',
-      category: 'Electronics',
-      listing_date: '2025-05-01',
-      price: 99.99,
-      url: 'https://www.ebay.com/itm/FAKE_EBAY_1001'
-    }
-  ];
-}
+ const { getAccessToken } = require('../config/ebay-oauth');
+ const axios = require('axios');
+ 
+ async function fetchFromEbayAPI() {
+   const token = await getAccessToken();
+ 
+   const res = await axios.get('https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search?q=tv&limit=5', {
+     headers: {
+       Authorization: `Bearer ${token}`
+     }
+   });
+ 
+   const items = res.data.itemSummaries;
+ 
+   return items.map(item => ({
+    listing_id: item.itemId,
+    product_name: item.title,
+    product_id: null,
+    seller_id: item.seller?.username || 'Unknown',
+    platform: item.marketplaceId || 'eBay',
+    category: item.categoryId || 'Other',
+    listing_date: item.itemCreationDate || new Date().toISOString(),
+    price: item.price?.value || null,
+    url: item.itemWebUrl || '',
+  }));
+  
+ }
+ 
 
 async function dailyImportListings() {
   console.log('[daily-import-listings] Starting import...');
