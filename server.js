@@ -34,7 +34,7 @@ app.use(session({
 }));
 
 
-// === Public Routes (existing) ===
+// === Public Routes  ===
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -42,30 +42,25 @@ app.post('/api/login', async (req, res) => {
       `SELECT "Username", "Role", "Name" FROM public."Users" 
        WHERE "Username" = $1 AND "Password" = $2`,
       [username, password]
-    ); 
+    );
 
     if (result.rows.length === 1) {
       const user = result.rows[0];
-      req.session.loggedIn = true;
-      req.session.role = user.Role;
-      req.session.name = user.Name;
-      req.session.username = user.Username;
-
-      if (user.Role === 'Investigator') {
-        return res.redirect('/investigator-dashboard.html');
-      } else if (user.Role === 'Manager') {
-        return res.redirect('/manager-dashboard.html');
-      } else {
-        return res.redirect('/login.html?error=unauthorized');
-      }
+      return res.json({
+        success: true,
+        name: user.Name,
+        role: user.Role,
+        username: user.Username
+      });
     } else {
-      return res.redirect('/login.html?error=true');
+      return res.json({ success: false, error: 'Invalid credentials' });
     }
   } catch (err) {
     console.error('[LOGIN ERROR]', err);
-    return res.status(500).send('Internal Server Error');
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 // === Auth Protection (existing) ===
 app.use((req, res, next) => {
@@ -234,19 +229,6 @@ app.patch('/api/violations/:id', async (req, res) => {
   }
 });
 
-app.get('/api/session-info', (req, res) => {
-  if (req.session && req.session.loggedIn) {
-    return res.json({
-      name: req.session.name,
-      role: req.session.role,
-      username: req.session.username
-    });
-  } else {
-    return res.status(401).json({ error: 'Not logged in' });
-  }
-});
-
-
 // === Start Server (existing) ===
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
@@ -254,6 +236,12 @@ app.listen(PORT, () => {
 
 // Redirect "/" to login page
 app.get('/', (req, res) => {
-  res.redirect('/login.html');
+  if (req.session && req.session.loggedIn && req.session.role === 'Manager') {
+    res.redirect('/manager-dashboard.html');
+  } else if (req.session && req.session.loggedIn && req.session.role === 'Investigator') {
+    res.redirect('/investigator-dashboard.html');
+  } else {
+    res.redirect('/login.html');
+  }
 });
 
