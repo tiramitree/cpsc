@@ -39,21 +39,21 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const result = await pool.query(
-      `SELECT username, role, name FROM public."Users" 
-       WHERE username = $1 AND password = $2`,
+      `SELECT "Username", "Role", "Name" FROM public."Users" 
+       WHERE "Username" = $1 AND "Password" = $2`,
       [username, password]
-    );
+    ); 
 
     if (result.rows.length === 1) {
       const user = result.rows[0];
       req.session.loggedIn = true;
-      req.session.role = user.role;
-      req.session.name = user.name;
-      req.session.username = user.username;
+      req.session.role = user.Role;
+      req.session.name = user.Name;
+      req.session.username = user.Username;
 
-      if (user.role === 'investigator') {
+      if (user.Role === 'Investigator') {
         return res.redirect('/investigator-dashboard.html');
-      } else if (user.role === 'manager') {
+      } else if (user.Role === 'Manager') {
         return res.redirect('/manager-dashboard.html');
       } else {
         return res.redirect('/login.html?error=unauthorized');
@@ -187,7 +187,7 @@ app.get('/api/db-check', async (req, res) => {
 });
 
 // === NEW: Listings & Violations APIs ===
-
+/*
 // GET /api/listings
 app.get('/api/listings', async (req, res) => {
   try {
@@ -307,8 +307,14 @@ app.get('/oauth-callback', async (req, res) => {
   const data = await response.json();
   res.send(data);
 });
-
+*/
 // === Start Server (existing) ===
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
+
+// Redirect "/" to login page
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
+
