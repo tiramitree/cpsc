@@ -187,56 +187,7 @@ app.get('/api/db-check', async (req, res) => {
 });
 
 // === NEW: Listings & Violations APIs ===
-/*
-// GET /api/listings
-app.get('/api/listings', async (req, res) => {
-  try {
-    const sql = `
-      SELECT "listing_id","product_name","product_id","seller_id","platform",
-             "category","listing_date","price","url","created_at"
-      FROM public."Listings"
-      ORDER BY "created_at" DESC
-      LIMIT 100
-    `;
-    const result = await pool.query(sql);
-    return res.json(result.rows);
-  } catch (err) {
-    console.error('[GET /api/listings ERROR]', err);
-    return res.status(500).json({ error: err.message });
-  }
-});
 
-// POST /api/listings (manual import)
-app.post('/api/listings', async (req, res) => {
-  try {
-    const {
-      listing_id, product_name, product_id,
-      seller_id, platform, category,
-      listing_date, price, url
-    } = req.body;
-
-    if (!listing_id || !product_name) {
-      return res.status(400).json({ error: 'listing_id and product_name are required.' });
-    }
-
-    await pool.query(`
-      INSERT INTO public."Listings"
-      ("listing_id","product_name","product_id","seller_id","platform",
-       "category","listing_date","price","url")
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-    `, [
-      listing_id, product_name,
-      product_id || null, seller_id || null,
-      platform || null, category || null,
-      listing_date || null, price || null, url || null
-    ]);
-
-    return res.json({ message: 'Listing inserted successfully' });
-  } catch (err) {
-    console.error('[POST /api/listings ERROR]', err);
-    return res.status(500).json({ error: err.message });
-  }
-});
 
 // GET /api/violations
 app.get('/api/violations', async (req, res) => {
@@ -283,31 +234,19 @@ app.patch('/api/violations/:id', async (req, res) => {
   }
 });
 
-app.get('/oauth-callback', async (req, res) => {
-  const code = req.query.code;
-
-  if (!code) {
-    return res.status(400).send('Missing code parameter');
+app.get('/api/session-info', (req, res) => {
+  if (req.session && req.session.loggedIn) {
+    return res.json({
+      name: req.session.name,
+      role: req.session.role,
+      username: req.session.username
+    });
+  } else {
+    return res.status(401).json({ error: 'Not logged in' });
   }
-
-  const params = new URLSearchParams();
-  params.append('grant_type', 'authorization_code');
-  params.append('code', code);
-  params.append('redirect_uri', 'https://cpscgroup6-anc6crgvgmhkayad.canadacentral-01.azurewebsites.net/oauth-callback');
-
-  const response = await fetch('https://api.sandbox.ebay.com/identity/v1/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Basic ' + Buffer.from(process.env.EBAY_CLIENT_ID + ':' + process.env.EBAY_CLIENT_SECRET).toString('base64'),
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: params
-  });
-
-  const data = await response.json();
-  res.send(data);
 });
-*/
+
+
 // === Start Server (existing) ===
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);

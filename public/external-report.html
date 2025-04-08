@@ -57,5 +57,21 @@
         });
     });
   </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/api/session-info')
+      .then(res => res.json())
+      .then(data => {
+        const userDisplay = document.getElementById('userDisplay');
+        if (data && data.name) {
+          userDisplay.innerText = `👤 Welcome, ${data.name}`;
+        } else {
+          userDisplay.innerText = '';
+        }
+      })
+  });
+</script>
+
 </body>
 </html>
