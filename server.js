@@ -65,17 +65,6 @@ app.post('/api/login', async (req, res) => {
 
 
 
-// === Auth Protection (existing) ===
-app.use((req, res, next) => {
-  const isPublic = req.path === '/login.html' || req.path === '/api/login';
-  const isAsset = req.path.endsWith('.js') || req.path.endsWith('.css') || req.path.startsWith('/assets');
-  if (isPublic || isAsset) return next();
-  if (req.path.endsWith('.html') && !req.session.loggedIn) {
-    return res.redirect('/login.html');
-  }
-  next();
-});
-
 // === Static Files (existing) ===
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -239,12 +228,5 @@ app.listen(PORT, () => {
 
 // Redirect "/" to login page
 app.get('/', (req, res) => {
-  if (req.session && req.session.loggedIn && req.session.role === 'Manager') {
-    res.redirect('/manager-dashboard.html');
-  } else if (req.session && req.session.loggedIn && req.session.role === 'Investigator') {
-    res.redirect('/investigator-dashboard.html');
-  } else {
-    res.redirect('/login.html');
-  }
+  res.redirect('/login.html');
 });
-
