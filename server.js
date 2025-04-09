@@ -206,10 +206,11 @@ app.patch('/api/violations/:id', async (req, res) => {
       SET "violation_outcome" = $1,
           "investigator_name" = COALESCE($2,'Unknown'),
           "alert_sent" = CASE WHEN $1='True Positive' THEN true ELSE false END,
-          "alert_type" = CASE WHEN $1='True Positive' THEN 'High Risk Seller' ELSE null END,
-          "alert_sent_date" = CASE WHEN $1='True Positive' THEN NOW() ELSE null END
-      WHERE "violation_id" = $2
-    `, [ outcome, id ]);
+          "alert_type" = CASE WHEN $1='True Positive' THEN 'Initial Notice' ELSE null END,
+          "alert_sent_date" = CASE WHEN $1='True Positive' THEN NOW() ELSE null END,
+          "annotation_description" = $3
+      WHERE "violation_id" = $4
+    `, [ outcome, investigator_name, description, id ]);
 
     res.json({ message: 'Violation annotated successfully' });
   } catch (err) {

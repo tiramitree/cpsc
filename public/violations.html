@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Violations Dashboard</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="#">CPSC Dashboard</a>
+      <div class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
+            <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
+            <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
+        </ul>        
+        <span id="userDisplay" class="navbar-text text-muted ms-3"></span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h2>Violations Dashboard</h2>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Violation ID</th>
+          <th>Listing ID</th>
+          <th>Investigator Name</th>
+          <th>Date Flagged</th>
+          <th>Status</th>
+          <th>Alert Sent</th>
+          <th>Alert Date</th>
+          <th>Alert Type</th>
+          <th>Annotate</th>
+        </tr>
+      </thead>
+      <tbody id="violationsTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Annotation Modal -->
+  <div class="modal fade" id="annotateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Annotate Violation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="annotateForm">
+            <input type="hidden" id="violationId" />
+            <div class="mb-3">
+              <label class="form-label">Annotation Type</label><br>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="outcome" value="True Positive" required>
+                <label class="form-check-label">True Positive</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="outcome" value="False Positive" required>
+                <label class="form-check-label">False Positive</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="description" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const modal = new bootstrap.Modal(document.getElementById('annotateModal'));
+    const table = document.getElementById("violationsTableBody");
+
+    fetch('/api/violations')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(v => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${v.violation_id}</td>
+            <td>${v.listing_id}</td>
+            <td>${v.investigator_name || ''}</td>
+            <td>${v.date_flagged?.slice(0, 10) || ''}</td>
+            <td>${v.violation_outcome}</td>
+            <td>${v.alert_sent ? 'Yes' : 'No'}</td>
+            <td>${v.alert_sent_date?.slice(0, 10) || ''}</td>
+            <td>${v.alert_type || ''}</td>
+            <td>${v.violation_outcome === 'Pending' ? `<button class="btn btn-sm btn-primary annotateBtn" data-id="${v.violation_id}">Annotate</button>` : ''}</td>
+          `;
+          table.appendChild(row);
+        });
+
+        document.querySelectorAll('.annotateBtn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.getElementById('violationId').value = btn.dataset.id;
+            modal.show();
+          });
+        });
+      });
+
+    document.getElementById('annotateForm').addEventListener('input', () => {
+      const outcome = document.querySelector('input[name="outcome"]:checked');
+      const desc = document.getElementById('description').value.trim();
+      document.getElementById('submitBtn').disabled = !(outcome && desc);
+    });
+
+    document.getElementById('annotateForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = document.getElementById('violationId').value;
+      const outcome = document.querySelector('input[name="outcome"]:checked').value;
+      const description = document.getElementById('description').value;
+      const name = JSON.parse(localStorage.getItem('cpsc_user')).name;
+
+      const res = await fetch(`/api/violations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outcome,
+          description,
+          investigator_name: name
+        })
+      });
+
+      if (res.ok) {
+        alert("Annotation saved successfully");
+        modal.hide();
+        location.reload();
+      } else {
+        const err = await res.json();
+        alert("Error: " + err.error);
+      }
+    });
+  </script>
+</body>
+</html>
