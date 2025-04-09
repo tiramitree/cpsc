@@ -196,7 +196,8 @@ app.get('/api/violations', async (req, res) => {
 app.patch('/api/violations/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { outcome, investigator_name } = req.body;
+    const { outcome, investigator_name, description } = req.body; // ✅ 修复点
+
     if (!outcome) {
       return res.status(400).json({ error: 'missing outcome' });
     }
@@ -218,6 +219,7 @@ app.patch('/api/violations/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // === 6) Manual Run-Matching Endpoint (No separate match-violations.js needed)
 async function runMatchingNow() {
