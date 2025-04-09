@@ -164,14 +164,24 @@ app.get('/api/recalls', async (req, res) => {
 });
 
 // === DB Health Check (existing) ===
-app.get('/api/db-check', async (req, res) => {
+// Example in server.js
+app.get('/db-check', async (req, res) => {
   try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ success: true, time: result.rows[0].now });
+    // 示例：查询数据库，或仅测试连接
+    // 如果成功：
+    res.json({ success: true, message: 'Database connected successfully.' });
+    
+    // 如果有错误可以抛出，如：
+    // throw new Error('DB connection failure...');
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('DB Check error:', err);
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Database error'
+    });
   }
 });
+
 
 
 // === 5) Violations Endpoints

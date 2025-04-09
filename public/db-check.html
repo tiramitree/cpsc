@@ -1,34 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>DB Connection Check</title>
-  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+  <meta charset="utf-8">
+  <title>DB Check</title>
 </head>
 <body>
-  <div class="container mt-5">
-    <h2 class="text-center mb-4">🔍 Database Connection Test</h2>
-    <div id="result" class="alert" role="alert">Checking...</div>
-  </div>
+  <h1>Database Check</h1>
+  <p id="status">Checking database connection...</p>
 
   <script>
-    fetch('/api/db-check')
-      .then(res => res.json())
-      .then(data => {
-        const resultDiv = document.getElementById('result');
-        if (data.success) {
-          resultDiv.className = 'alert alert-success';
-          resultDiv.innerText = data.message + `\nTime: ${data.time}`;
-        } else {
-          resultDiv.className = 'alert alert-danger';
-          resultDiv.innerText = '❌ Failed: ' + data.error;
+    async function checkDatabase() {
+      try {
+        // Replace '/db-check' with your actual server endpoint
+        const response = await fetch('/db-check');
+        
+        // If the response is not OK, throw an error to be caught below
+        if (!response.ok) {
+          throw new Error(`Network response was not ok (status: ${response.status})`);
         }
-      })
-      .catch(err => {
-        const resultDiv = document.getElementById('result');
-        resultDiv.className = 'alert alert-danger';
-        resultDiv.innerText = '❌ Exception: ' + err.message;
-      });
+
+        // Parse the JSON response
+        const result = await response.json();
+        
+        // Example: let's say the server returns { success: true/false, message: '...' }
+        if (result.success) {
+          document.getElementById('status').innerText = 'Database connection is OK!';
+          console.log('DB Check successful:', result);
+        } else {
+          document.getElementById('status').innerText = `Database check failed: ${result.message || 'Unknown error'}`;
+          console.error('DB Check error response:', result);
+        }
+      } catch (error) {
+        // This handles any network/JS errors
+        document.getElementById('status').innerText = `Error fetching DB check: ${error.message}`;
+        console.error('Error during DB check:', error);
+      }
+    }
+
+    // On page load, automatically call checkDatabase()
+    window.addEventListener('DOMContentLoaded', checkDatabase);
   </script>
 </body>
 </html>
