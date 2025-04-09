@@ -28,6 +28,13 @@
       </ul>
       <span id="userDisplay" class="navbar-text text-muted ms-3"></span>
     </div>
+    <div class="container">
+      <!-- RUN MATCHING BUTTON -->
+      <button id="runMatchingBtn" class="btn btn-warning mt-3">
+        Run Matching
+      </button>
+      <span id="matchResult" class="ms-2 text-success fw-bold"></span>
+    </div>
   </div>
 </nav>
 
@@ -46,13 +53,6 @@
   </div>
 </section>
 
-<div class="container">
-  <!-- RUN MATCHING BUTTON -->
-  <button id="runMatchingBtn" class="btn btn-warning mt-3">
-    Run Matching
-  </button>
-  <span id="matchResult" class="ms-2 text-success fw-bold"></span>
-</div>
 
 <!-- Manager Features Highlight -->
 <section class="py-5">
@@ -84,21 +84,9 @@
 </section>
 
 
-
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="bold-and-bright.js"></script>
 
-<script>
-  // Fetch session information and display manager's name
-  fetch('/api/session-info')
-    .then(res => res.json())
-    .then(data => {
-      if (data.name) {
-        document.getElementById("managerName").innerText = "Logged in as: " + data.name;
-      }
-    })
-    .catch(err => console.error('Failed to fetch session info:', err));
-</script>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
