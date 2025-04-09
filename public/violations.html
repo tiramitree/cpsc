@@ -92,8 +92,13 @@
             <td>${v.alert_sent ? 'Yes' : 'No'}</td>
             <td>${v.alert_sent_date?.slice(0, 10) || ''}</td>
             <td>${v.alert_type || ''}</td>
-            <td>${v.violation_outcome === 'Pending' ? `<button class="btn btn-sm btn-primary annotateBtn" data-id="${v.violation_id}">Annotate</button>` : ''}</td>
-          `;
+            <td>${
+            v.violation_outcome !== 'True Positive'
+                ? `<button class="btn btn-sm btn-primary annotateBtn" data-id="${v.violation_id}">Annotate</button>` 
+                : ''
+            }</td>
+
+            `;
           table.appendChild(row);
         });
 
