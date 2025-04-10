@@ -135,11 +135,11 @@
 
   <script>
     let currentViolationId = null;
-
+  
     document.addEventListener('DOMContentLoaded', () => {
       loadViolations();
     });
-
+  
     async function loadViolations() {
       try {
         const res = await fetch('/api/violations');
@@ -150,59 +150,80 @@
         console.error('Error loading violations:', err);
       }
     }
-
+  
     function renderViolations(violations) {
       const tbody = document.querySelector('#violationsTable tbody');
       tbody.innerHTML = '';
-
+  
       violations.forEach(item => {
         const tr = document.createElement('tr');
-
+  
+        // Violation_ID
         const tdVid = document.createElement('td');
         tdVid.textContent = item.Violation_ID;
         tr.appendChild(tdVid);
-
+  
+        // Listing_ID
         const tdLid = document.createElement('td');
         tdLid.textContent = item.Listing_ID;
         tr.appendChild(tdLid);
-
+  
+        // Product_Name
         const tdProductName = document.createElement('td');
         tdProductName.textContent = item.Product_Name || '';
         tr.appendChild(tdProductName);
-
+  
+        // Investigator_Name
         const tdInv = document.createElement('td');
         tdInv.textContent = item.Investigator_Name || '';
         tr.appendChild(tdInv);
-
+  
+        // Date_Flagged
         const tdDate = document.createElement('td');
         tdDate.textContent = (item.Date_Flagged || '').split('T')[0];
         tr.appendChild(tdDate);
-
+  
+        // Violation_Status (boolean false => '', string => display)
         const tdStatus = document.createElement('td');
-        tdStatus.textContent = item.Violation_Status || '';
+        if (typeof item.Violation_Status === 'boolean') {
+          // 如果是布尔值 false，视为未注解，显示空字符串
+          tdStatus.textContent = item.Violation_Status ? 'true' : '';
+        } else {
+          // 如果是字符串 "True Positive"/"False Positive"，或为空
+          tdStatus.textContent = item.Violation_Status || '';
+        }
         tr.appendChild(tdStatus);
-
+  
+        // Alert_Sent
         const tdAlertSent = document.createElement('td');
         tdAlertSent.textContent = item.Alert_Sent === true ? 'true' : 'false';
         tr.appendChild(tdAlertSent);
-
+  
+        // Alert_Type
         const tdAlertType = document.createElement('td');
         tdAlertType.textContent = item.Alert_Type || '';
         tr.appendChild(tdAlertType);
-
+  
+        // Alert_Date
         const tdAlertDate = document.createElement('td');
         tdAlertDate.textContent = item.Alert_Date ? item.Alert_Date.split('T')[0] : '';
         tr.appendChild(tdAlertDate);
-
+  
+        // Reasoning
         const tdReasoning = document.createElement('td');
         tdReasoning.textContent = item.Reasoning || '';
         tr.appendChild(tdReasoning);
-
+  
         // Action
         const tdAction = document.createElement('td');
-        if (item.Violation_Status === 'True Positive' || item.Violation_Status === 'False Positive') {
+        // 判断：只有字符串 'True Positive'/'False Positive' 才视为 Annotated
+        if (
+          typeof item.Violation_Status === 'string'
+          && (item.Violation_Status === 'True Positive' || item.Violation_Status === 'False Positive')
+        ) {
           tdAction.textContent = 'Annotated';
         } else {
+          // 其余包括 boolean false 都视为未注解
           const btn = document.createElement('button');
           btn.classList.add('btn', 'btn-sm', 'btn-warning');
           btn.textContent = 'Annotate';
@@ -210,15 +231,15 @@
           tdAction.appendChild(btn);
         }
         tr.appendChild(tdAction);
-
+  
         tbody.appendChild(tr);
       });
     }
-
+  
     // 初始化bootstrap modal
     const annotateModalEl = document.getElementById('annotateModal');
     const annotateModal = new bootstrap.Modal(annotateModalEl, { keyboard: false });
-
+  
     // 打开弹窗
     function openAnnotateModal(violationId) {
       currentViolationId = violationId;
@@ -226,34 +247,34 @@
       resetForm();
       annotateModal.show();
     }
-
+  
     // 关闭弹窗
     function closeAnnotateModal() {
       annotateModal.hide();
       resetForm();
     }
-
+  
     // 表单 & 按钮
     function resetForm() {
       document.getElementById('annotateForm').reset();
       toggleSubmitButton();
     }
-
+  
     function toggleSubmitButton() {
       const outcomeVal = document.querySelector('input[name="annotationType"]:checked');
       const reasoningVal = document.getElementById('reasoning').value.trim();
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = !(outcomeVal && reasoningVal.length > 0);
     }
-
+  
     document.querySelectorAll('input[name="annotationType"]').forEach(radio => {
       radio.addEventListener('change', toggleSubmitButton);
     });
     document.getElementById('reasoning').addEventListener('input', toggleSubmitButton);
-
+  
     // 关闭按钮
     document.getElementById('closeModalBtn').addEventListener('click', closeAnnotateModal);
-
+  
     // 提交注解
     document.getElementById('annotateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -262,21 +283,21 @@
       const reasoningVal = document.getElementById('reasoning').value.trim();
       const user = JSON.parse(localStorage.getItem('cpsc_user'));
       if (!outcomeVal || !reasoningVal) return;
-
+  
       try {
         const res = await fetch(`/api/violations/${currentViolationId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-        outcome: outcomeVal,
-        reasoning: reasoningVal,
-        name: user?.name || 'Unknown'
-        })
+            outcome: outcomeVal,
+            reasoning: reasoningVal,
+            name: user?.name || 'Unknown'
+          })
         });
         if (!res.ok) throw new Error(`Patch failed, status: ${res.status}`);
         const result = await res.json();
         console.log('Patch result:', result);
-
+  
         document.getElementById('successMsg').classList.remove('d-none');
         closeAnnotateModal();
         loadViolations(); // 刷新
@@ -286,6 +307,7 @@
       }
     });
   </script>
+  
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
