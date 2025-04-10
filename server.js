@@ -216,27 +216,26 @@ app.get('/api/violations', async (req, res) => {
 app.patch('/api/violations/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    // These come from front-end body:
-    // outcome => stored in "Violation_Outcome"
-    // investigator_name => "Investigator_Name"
-    // description => "Reasoning"
-    const { outcome, investigator_name, description } = req.body;
+    const { outcome, reasoning } = req.body;
 
-    if (!outcome) {
-      return res.status(400).json({ error: 'missing outcome' });
+    if (!outcome || !reasoning) {
+      return res.status(400).json({ error: 'Missing outcome or reasoning.' });
     }
+
+    // 从 session 获取当前登录的用户姓名，如果没有，则标为 Unknown
+    const investigator_name = req.session?.user?.Name || 'Unknown';
 
     await pool.query(`
       UPDATE public."Violations"
       SET
-        "Violation_Outcome" = $1,
-        "Investigator_Name" = COALESCE($2, 'Unknown'),
+        "Violation_Status" = $1,
+        "Investigator_Name" = $2,
         "Alert_Sent" = CASE WHEN $1 = 'True Positive' THEN true ELSE false END,
-        "Alert_Type" = CASE WHEN $1 = 'True Positive' THEN 'Initial Notice' ELSE null END,
-        "Alert_Date" = CASE WHEN $1 = 'True Positive' THEN NOW() ELSE null END,
+        "Alert_Type" = CASE WHEN $1 = 'True Positive' THEN 'Initial Notice' ELSE NULL END,
+        "Alert_Date" = CASE WHEN $1 = 'True Positive' THEN NOW() ELSE NULL END,
         "Reasoning" = $3
       WHERE "Violation_ID" = $4
-    `, [outcome, investigator_name, description, id]);
+    `, [outcome, investigator_name, reasoning, id]);
 
     res.json({ message: 'Violation annotated successfully' });
   } catch (err) {
@@ -244,6 +243,7 @@ app.patch('/api/violations/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // === 6) Manual Run-Matching Endpoint
 async function runMatchingNow() {
