@@ -46,7 +46,7 @@ app.post('/api/login', async (req, res) => {
 
     if (result.rows.length === 1) {
       const user = result.rows[0];
-      
+
       req.session.user = {
         Username: user.Username,
         Role: user.Role,
@@ -281,7 +281,8 @@ app.patch('/api/violations/:id', async (req, res) => {
     await pool.query(`
       UPDATE public."Violations"
       SET
-        "Violation_Status" = $1,
+        "Violation_Status" = true,
+        "Violation_Outcome" = $1,
         "Investigator_Name" = $2,
         "Alert_Sent" = CASE WHEN $1 = 'True Positive' THEN true ELSE false END,
         "Alert_Type" = CASE WHEN $1 = 'True Positive' THEN 'Initial Notice' ELSE NULL END,
