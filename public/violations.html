@@ -219,7 +219,7 @@
         // 判断：只有字符串 'True Positive'/'False Positive' 才视为 Annotated
         if (
           typeof item.Violation_Status === 'string'
-          && (item.Violation_Status === 'True Positive' || item.Violation_Status === 'False Positive')
+          && (item.Violation_Status === 'True Positive')
         ) {
           tdAction.textContent = 'Annotated';
         } else {
