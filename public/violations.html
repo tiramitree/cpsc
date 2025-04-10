@@ -214,23 +214,22 @@
         tdReasoning.textContent = item.Reasoning || '';
         tr.appendChild(tdReasoning);
   
-        // Action
+            // Action
         const tdAction = document.createElement('td');
-        // 判断：只有字符串 'True Positive'/'False Positive' 才视为 Annotated
-        if (
-          typeof item.Violation_Status === 'string'
-          && (item.Violation_Status === 'True Positive')
-        ) {
-          tdAction.textContent = 'Annotated';
+
+        // ✅ 只要 Violation_Status === true，表示已注解
+        if (item.Violation_Status === true) {
+        tdAction.textContent = 'Annotated';
         } else {
-          // 其余包括 boolean false 都视为未注解
-          const btn = document.createElement('button');
-          btn.classList.add('btn', 'btn-sm', 'btn-warning');
-          btn.textContent = 'Annotate';
-          btn.addEventListener('click', () => openAnnotateModal(item.Violation_ID));
-          tdAction.appendChild(btn);
+        const btn = document.createElement('button');
+        btn.classList.add('btn', 'btn-sm', 'btn-warning');
+        btn.textContent = 'Annotate';
+        btn.addEventListener('click', () => openAnnotateModal(item.Violation_ID));
+        tdAction.appendChild(btn);
         }
+
         tr.appendChild(tdAction);
+
   
         tbody.appendChild(tr);
       });
