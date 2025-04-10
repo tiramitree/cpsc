@@ -12,7 +12,7 @@
 <!-- Navbar with Manager functionalities -->
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
-    <a class="navbar-brand" id="dashboardLink" href="#">CPSC Dashboard</a>
+    <a class="navbar-brand" id="manager-dashboard.html" href="#">CPSC Dashboard</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
             aria-expanded="false" aria-label="Toggle navigation">
@@ -27,7 +27,11 @@
         <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
         <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
       </ul>
-      <span id="userDisplay" class="navbar-text text-muted ms-3"></span>
+      <span class="navbar-text text-muted ms-3">
+        <span id="userDisplay"></span>
+        <a href="#" id="logoutBtn" class="ms-3 text-danger text-decoration-none">Logout</a>
+      </span>
+      
     </div>
   </div>
 </nav>
@@ -117,6 +121,14 @@
         resultSpan.textContent = '⚠ Failed to run matching';
       }
     });
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('cpsc_user');
+        window.location.href = 'login.html';
+      });
+    }
   });
   </script>
   

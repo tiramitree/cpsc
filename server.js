@@ -335,7 +335,7 @@ async function runMatchingNow() {
         if (existing.rowCount === 0) {
           await pool.query(`
             INSERT INTO public."Violations"
-            ("Listing_ID", "Date_Flagged", "Violation_Status", "Manufacturer")
+            ("Listing_ID", "Date_Flagged", "Violation_Status", "Investigator_Name")
             VALUES ($1, CURRENT_DATE, false, $2)
           `, [
             listing["Listing_ID"],

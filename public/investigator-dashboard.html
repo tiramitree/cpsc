@@ -24,7 +24,11 @@
           <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
           <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
         </ul>        
-        <span id="userDisplay" class="navbar-text text-muted ms-3"></span>
+        <span class="navbar-text text-muted ms-3">
+          <span id="userDisplay"></span>
+          <a href="#" id="logoutBtn" class="ms-3 text-danger text-decoration-none">Logout</a>
+        </span>
+        
       </div>
     </div>
   </nav>
@@ -74,14 +78,25 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-  const user = JSON.parse(localStorage.getItem('cpsc_user'));
-  if (!user) {
-    window.location.href = 'login.html';
-  } else {
-    document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
-  }
-});
+    const user = JSON.parse(localStorage.getItem('cpsc_user'));
+    if (!user) {
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
+    }
+
+    // 🔒 Logout 功能
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('cpsc_user');
+        window.location.href = 'login.html';
+      });
+    }
+  });
 </script>
+
 
 
 </body>
