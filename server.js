@@ -194,7 +194,6 @@ app.post('/api/import-listing', async (req, res) => {
     Marketplace_ID
   } = req.body;
 
-  // 检查必填字段
   if (!Listing_ID || !Product_Name || !Listing_Date || !Price ||
       !Category || !URL || !Seller_ID || !Marketplace_ID) {
     return res.status(400).json({ error: 'All fields are required.' });
