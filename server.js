@@ -44,6 +44,12 @@ app.post('/api/login', async (req, res) => {
       [username, password]
     );
 
+    req.session.user = {
+      Username: user.Username,
+      Role: user.Role,
+      Name: user.Name
+    };
+
     if (result.rows.length === 1) {
       const user = result.rows[0];
       return res.json({
@@ -238,6 +244,7 @@ app.get('/api/violations', async (req, res) => {
       SELECT
         "Violation_ID",
         "Listing_ID",
+        "Product_Name",
         "Investigator_Name",
         "Date_Flagged",
         "Violation_Status",
@@ -268,7 +275,7 @@ app.patch('/api/violations/:id', async (req, res) => {
       return res.status(400).json({ error: 'Missing outcome or reasoning.' });
     }
 
-    const investigator_name = req.session?.user?.Name || 'Unknown';
+    const investigator_name = req.body.name || req.session?.user?.Name || 'Unknown';
 
     await pool.query(`
       UPDATE public."Violations"
