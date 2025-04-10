@@ -83,49 +83,53 @@
   </form>
   
 
-  <div id="message" class="mt-3"></div>
-    document.getElementById('listingForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-  
-      const listing_date = new Date(document.getElementById('Listing_Date').value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (listing_date > today) {
-        alert('Listing Date cannot be in the future.');
-        return;
+  <div id="message"></div>
+
+<script>
+  document.getElementById('listingForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const listing_date = new Date(document.getElementById('Listing_Date').value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (listing_date > today) {
+      alert('Listing Date cannot be in the future.');
+      return;
+    }
+
+    const data = {
+      Listing_ID: document.getElementById('Listing_ID').value.trim(),
+      Product_Name: document.getElementById('Product_Name').value.trim(),
+      Listing_Date: document.getElementById('Listing_Date').value,
+      Price: parseFloat(document.getElementById('Price').value),
+      Category: document.getElementById('Category').value,
+      URL: document.getElementById('URL').value.trim(),
+      Seller_ID: document.getElementById('Seller_ID').value.trim(),
+      Marketplace_ID: document.getElementById('Marketplace_ID').value
+    };
+
+    try {
+      const response = await fetch('/api/import-listing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      const messageEl = document.getElementById('message');
+
+      if (response.ok) {
+        messageEl.innerHTML = `<div class="alert alert-success">Listing successfully imported!</div>`;
+        document.getElementById('listingForm').reset();
+      } else {
+        messageEl.innerHTML = `<div class="alert alert-danger">${result.error || 'Submission failed.'}</div>`;
       }
-    
-      const data = {
-        Listing_ID: document.getElementById('Listing_ID').value.trim(),
-        Product_Name: document.getElementById('Product_Name').value.trim(),
-        Listing_Date: document.getElementById('Listing_Date').value,
-        Price: parseFloat(document.getElementById('Price').value),
-        Category: document.getElementById('Category').value,
-        URL: document.getElementById('URL').value.trim(),
-        Seller_ID: document.getElementById('Seller_ID').value.trim(),
-        Marketplace_ID: document.getElementById('Marketplace_ID').value
-      };
-    
-      try {
-        const response = await fetch('/api/import-listing', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-    
-        const result = await response.json();
-        const messageEl = document.getElementById('message');
-    
-        if (response.ok) {
-          messageEl.innerHTML = `<div class="alert alert-success">Listing successfully imported!</div>`;
-          document.getElementById('listingForm').reset();
-        } else {
-          messageEl.innerHTML = `<div class="alert alert-danger">${result.error || 'Submission failed.'}</div>`;
-        }
-      } catch (err) {
-        alert('Error submitting listing: ' + err.message);
-      }
-    });
+    } catch (err) {
+      alert('Error submitting listing: ' + err.message);
+    }
+  });
+</script>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
   const user = JSON.parse(localStorage.getItem('cpsc_user'));
