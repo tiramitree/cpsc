@@ -217,8 +217,7 @@
             // Action
         const tdAction = document.createElement('td');
 
-        // ✅ 只要 Violation_Status === true，表示已注解
-        if (item.Violation_Status === true) {
+        if (item.Violation_Status === 'true') {
         tdAction.textContent = 'Annotated';
         } else {
         const btn = document.createElement('button');

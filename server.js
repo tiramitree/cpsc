@@ -281,8 +281,7 @@ app.patch('/api/violations/:id', async (req, res) => {
     await pool.query(`
       UPDATE public."Violations"
       SET
-        "Violation_Status" = true,
-        "Violation_Outcome" = $1,
+        "Violation_Status" = $1,
         "Investigator_Name" = $2,
         "Alert_Sent" = CASE WHEN $1 = 'True Positive' THEN true ELSE false END,
         "Alert_Type" = CASE WHEN $1 = 'True Positive' THEN 'Initial Notice' ELSE NULL END,
