@@ -44,21 +44,21 @@ app.post('/api/login', async (req, res) => {
       [username, password]
     );
 
-    req.session.user = {
-      Username: user.Username,
-      Role: user.Role,
-      Name: user.Name
-    };
-
     if (result.rows.length === 1) {
       const user = result.rows[0];
+      
+      req.session.user = {
+        Username: user.Username,
+        Role: user.Role,
+        Name: user.Name
+      };
+
       return res.json({
         success: true,
         name: user.Name,
         role: user.Role,
         username: user.Username
       });
-
     } else {
       return res.json({ success: false, error: 'Invalid credentials' });
     }
@@ -68,6 +68,7 @@ app.post('/api/login', async (req, res) => {
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
+
 
 
 
