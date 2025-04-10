@@ -1,94 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Violations</title>
-  <style>
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-    }
-    .modal-content {
-      background: #fff;
-      padding: 16px;
-      margin: 50px auto;
-      width: 400px;
-      position: relative;
-    }
-    .close-btn {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Import Marketplace Listing</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <h1>Violations</h1>
-  <div id="successMsg" style="color: green; display: none;">Annotation saved successfully</div>
-
-  <table id="violationsTable" border="1">
-    <thead>
-      <tr>
-        <th>Violation_ID</th>
-        <th>Listing_ID</th>
-        <th>Investigator_Name</th>
-        <th>Date_Flagged</th>
-        <th>Violation_Status</th>
-        <th>Alert_Sent</th>
-        <th>Alert_Type</th>
-        <th>Alert_Date</th>
-        <th>Reasoning</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <!-- Modal -->
-  <div class="modal" id="annotateModal">
-    <div class="modal-content">
-      <span class="close-btn" id="closeModal">&times;</span>
-      <h3>Annotate Violation</h3>
-
-      <form id="annotateForm">
-        <div>
-          <label>
-            <input type="radio" name="annotationType" value="True Positive" />
-            True Positive
-          </label>
-          <label>
-            <input type="radio" name="annotationType" value="False Positive" />
-            False Positive
-          </label>
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <div class="container">
+          <a class="navbar-brand" id="dashboardLink" href="#">CPSC Dashboard</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                  aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
+              <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
+              <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
+            </ul>        
+            <span id="userDisplay" class="navbar-text text-muted ms-3"></span>
+          </div>
         </div>
+      </nav>
 
-        <div>
-          <label for="reasoning">Reasoning (required):</label><br />
-          <textarea id="reasoning" name="reasoning" rows="3" cols="40"></textarea>
+  <!-- 内容主体 -->
+  <div class="container mt-4">
+    <h1>Violations</h1>
+
+    <div id="successMsg" class="alert alert-success d-none" role="alert">
+      Annotation saved successfully
+    </div>
+
+    <!-- 违规记录表格 -->
+    <div class="table-responsive">
+      <table id="violationsTable" class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Violation_ID</th>
+            <th>Listing_ID</th>
+            <th>Investigator_Name</th>
+            <th>Date_Flagged</th>
+            <th>Violation_Status</th>
+            <th>Alert_Sent</th>
+            <th>Alert_Type</th>
+            <th>Alert_Date</th>
+            <th>Reasoning</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 动态加载 -->
+        </tbody>
+      </table>
+    </div>
+  </div> <!-- end container -->
+
+  <!-- 注解弹窗(使用 Bootstrap Modal 结构) -->
+  <div
+    class="modal fade"
+    id="annotateModal"
+    tabindex="-1"
+    aria-labelledby="annotateModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="annotateModalLabel">Annotate Violation</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+            id="closeModalBtn"
+          ></button>
         </div>
+        <div class="modal-body">
+          <form id="annotateForm">
+            <div class="mb-3">
+              <label class="form-label d-block">Annotation Type:</label>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="annotationType"
+                  id="tpRadio"
+                  value="True Positive"
+                >
+                <label class="form-check-label" for="tpRadio">True Positive</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="annotationType"
+                  id="fpRadio"
+                  value="False Positive"
+                >
+                <label class="form-check-label" for="fpRadio">False Positive</label>
+              </div>
+            </div>
 
-        <br />
-        <button type="submit" id="submitBtn" disabled>Submit</button>
-      </form>
+            <div class="mb-3">
+              <label for="reasoning" class="form-label">Reasoning (required)</label>
+              <textarea
+                class="form-control"
+                id="reasoning"
+                name="reasoning"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="submitBtn"
+              disabled
+            >
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- Bootstrap JS (若 import-listings.html 用其他版本，请保持一致) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+
   <script>
-    let currentViolationId = null; 
+    let currentViolationId = null;
+
+    // 参考 import-listings 里的方式获取用户名, 这里仅示例:
+    document.addEventListener('DOMContentLoaded', () => {
+      // e.g. document.getElementById('currentUserName').textContent = localStorage.getItem('username') || 'Unknown';
+      loadViolations();
+    });
 
     async function loadViolations() {
       try {
-        const response = await fetch('/api/violations');
-        if (!response.ok) {
-          throw new Error('Failed to fetch violations, status: ' + response.status);
-        }
-        const data = await response.json();  
+        const res = await fetch('/api/violations');
+        if (!res.ok) throw new Error(`Failed to fetch, status: ${res.status}`);
+        const data = await res.json();
         renderViolations(data);
       } catch (err) {
         console.error('Error loading violations:', err);
@@ -102,6 +160,7 @@
       violations.forEach(item => {
         const tr = document.createElement('tr');
 
+        // 各列
         const tdVid = document.createElement('td');
         tdVid.textContent = item.Violation_ID;
         tr.appendChild(tdVid);
@@ -114,9 +173,9 @@
         tdInv.textContent = item.Investigator_Name || '';
         tr.appendChild(tdInv);
 
-        const tdDateFlagged = document.createElement('td');
-        tdDateFlagged.textContent = item.Date_Flagged || '';
-        tr.appendChild(tdDateFlagged);
+        const tdDate = document.createElement('td');
+        tdDate.textContent = (item.Date_Flagged || '').split('T')[0];
+        tr.appendChild(tdDate);
 
         const tdStatus = document.createElement('td');
         tdStatus.textContent = item.Violation_Status || '';
@@ -131,19 +190,20 @@
         tr.appendChild(tdAlertType);
 
         const tdAlertDate = document.createElement('td');
-        tdAlertDate.textContent = item.Alert_Date || '';
+        tdAlertDate.textContent = item.Alert_Date ? item.Alert_Date.split('T')[0] : '';
         tr.appendChild(tdAlertDate);
 
         const tdReasoning = document.createElement('td');
         tdReasoning.textContent = item.Reasoning || '';
         tr.appendChild(tdReasoning);
 
+        // Action
         const tdAction = document.createElement('td');
-
         if (item.Violation_Status === 'True Positive' || item.Violation_Status === 'False Positive') {
           tdAction.textContent = 'Annotated';
         } else {
           const btn = document.createElement('button');
+          btn.classList.add('btn', 'btn-sm', 'btn-warning');
           btn.textContent = 'Annotate';
           btn.addEventListener('click', () => openAnnotateModal(item.Violation_ID));
           tdAction.appendChild(btn);
@@ -154,38 +214,35 @@
       });
     }
 
+    // 初始化bootstrap modal
+    const annotateModalEl = document.getElementById('annotateModal');
+    const annotateModal = new bootstrap.Modal(annotateModalEl, { keyboard: false });
+
+    // 打开弹窗
     function openAnnotateModal(violationId) {
       currentViolationId = violationId;
-      document.getElementById('annotateModal').style.display = 'block';
-      document.getElementById('successMsg').style.display = 'none';
+      document.getElementById('successMsg').classList.add('d-none'); // 先隐藏成功提示
       resetForm();
+      annotateModal.show();
     }
 
+    // 关闭弹窗
     function closeAnnotateModal() {
-      document.getElementById('annotateModal').style.display = 'none';
+      annotateModal.hide();
       resetForm();
     }
 
+    // 表单 & 按钮
     function resetForm() {
       document.getElementById('annotateForm').reset();
       toggleSubmitButton();
     }
 
     function toggleSubmitButton() {
-      const radios = document.querySelectorAll('input[name="annotationType"]');
-      const reasoning = document.getElementById('reasoning').value.trim();
-
-      let radioChecked = false;
-      radios.forEach(r => {
-        if (r.checked) radioChecked = true;
-      });
-
+      const outcomeVal = document.querySelector('input[name="annotationType"]:checked');
+      const reasoningVal = document.getElementById('reasoning').value.trim();
       const submitBtn = document.getElementById('submitBtn');
-      if (radioChecked && reasoning.length > 0) {
-        submitBtn.disabled = false;
-      } else {
-        submitBtn.disabled = true;
-      }
+      submitBtn.disabled = !(outcomeVal && reasoningVal.length > 0);
     }
 
     document.querySelectorAll('input[name="annotationType"]').forEach(radio => {
@@ -193,45 +250,38 @@
     });
     document.getElementById('reasoning').addEventListener('input', toggleSubmitButton);
 
+    // 关闭按钮
+    document.getElementById('closeModalBtn').addEventListener('click', closeAnnotateModal);
+
+    // 提交注解
     document.getElementById('annotateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const radios = document.querySelectorAll('input[name="annotationType"]');
-      let outcomeValue = null;
-      radios.forEach(r => { if (r.checked) outcomeValue = r.value; });
-
-      const reasoningValue = document.getElementById('reasoning').value.trim();
-      if (!outcomeValue || !reasoningValue) {
-        return;
-      }
+      const outcomeRadio = document.querySelector('input[name="annotationType"]:checked');
+      const outcomeVal = outcomeRadio ? outcomeRadio.value : null;
+      const reasoningVal = document.getElementById('reasoning').value.trim();
+      if (!outcomeVal || !reasoningVal) return;
 
       try {
-        const response = await fetch(`/api/violations/${currentViolationId}`, {
+        const res = await fetch(`/api/violations/${currentViolationId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            outcome: outcomeValue,
-            reasoning: reasoningValue
+            outcome: outcomeVal,
+            reasoning: reasoningVal
           })
         });
-        if (!response.ok) {
-          throw new Error('Patch failed, status: ' + response.status);
-        }
-        const resData = await response.json();
-        console.log('Patch result:', resData);
+        if (!res.ok) throw new Error(`Patch failed, status: ${res.status}`);
+        const result = await res.json();
+        console.log('Patch result:', result);
 
-        document.getElementById('successMsg').style.display = 'block';
-        closeAnnotateModal(); 
-        loadViolations();     
+        document.getElementById('successMsg').classList.remove('d-none');
+        closeAnnotateModal();
+        loadViolations(); // 刷新
       } catch (err) {
         console.error('Error patching violation:', err);
         alert('Failed to save annotation. Check console for details.');
       }
     });
-
-
-    document.getElementById('closeModal').addEventListener('click', closeAnnotateModal);
-
-    window.addEventListener('DOMContentLoaded', loadViolations);
   </script>
 </body>
 </html>
