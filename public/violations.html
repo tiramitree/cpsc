@@ -260,6 +260,7 @@
       const outcomeRadio = document.querySelector('input[name="annotationType"]:checked');
       const outcomeVal = outcomeRadio ? outcomeRadio.value : null;
       const reasoningVal = document.getElementById('reasoning').value.trim();
+      const user = JSON.parse(localStorage.getItem('cpsc_user'));
       if (!outcomeVal || !reasoningVal) return;
 
       try {
@@ -267,9 +268,10 @@
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            outcome: outcomeVal,
-            reasoning: reasoningVal
-          })
+        outcome: outcomeVal,
+        reasoning: reasoningVal,
+        name: user?.name || 'Unknown'
+        })
         });
         if (!res.ok) throw new Error(`Patch failed, status: ${res.status}`);
         const result = await res.json();
