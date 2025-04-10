@@ -249,9 +249,7 @@ app.patch('/api/violations/:id', async (req, res) => {
 async function runMatchingNow() {
   // 1) Load Recalls
   const recallRes = await pool.query(`
-    SELECT
-      "Recall_ID",
-      "Product_Name"
+    SELECT "Product_Name"
     FROM public."Recalls"
     ORDER BY "Recall_Date" DESC
     LIMIT 500
@@ -260,9 +258,7 @@ async function runMatchingNow() {
 
   // 2) Load recent Listings
   const listRes = await pool.query(`
-    SELECT
-      "Listing_ID",
-      "Product_Name"
+    SELECT "Listing_ID", "Product_Name"
     FROM public."Listings"
     WHERE "Listing_Date" >= NOW() - interval '30 days'
   `);
@@ -270,34 +266,33 @@ async function runMatchingNow() {
 
   let inserted = 0;
 
-  // 3) Compare listings vs recalls by Product_Name only
-  // 3) Compare listings vs recalls by Product_Name only (with trim and log)
-for (const listing of listings) {
-  for (const recall of recalls) {
+  // 3) Compare listings vs recalls by Product_Name only (ignore Recall_ID)
+  for (const listing of listings) {
     const listingName = listing["Product_Name"]?.toLowerCase().trim() || '';
-    const recallName = recall["Product_Name"]?.toLowerCase().trim() || '';
 
-    if (listingName === recallName && listingName !== '') {
-      // 检查是否已存在
-      const existing = await pool.query(`
-        SELECT 1 FROM public."Violations"
-        WHERE "Listing_ID" = $1 AND "Recall_ID" = $2
-      `, [listing["Listing_ID"], recall["Recall_ID"]]);
+    for (const recall of recalls) {
+      const recallName = recall["Product_Name"]?.toLowerCase().trim() || '';
 
-      if (existing.rowCount === 0) {
-        await pool.query(`
-          INSERT INTO public."Violations"
-          ("Listing_ID", "Recall_ID", "Date_Flagged", "Violation_Status")
-          VALUES ($1, $2, CURRENT_DATE, false)
-        `, [listing["Listing_ID"], recall["Recall_ID"]]);
+      if (listingName === recallName && listingName !== '') {
+        // 检查是否已存在（避免重复插入）
+        const existing = await pool.query(`
+          SELECT 1 FROM public."Violations"
+          WHERE "Listing_ID" = $1
+        `, [listing["Listing_ID"]]);
 
-        console.log(`[MATCHED] Inserted violation: "${listingName}" from Listing ${listing["Listing_ID"]}`);
-        inserted++;
+        if (existing.rowCount === 0) {
+          await pool.query(`
+            INSERT INTO public."Violations"
+            ("Listing_ID", "Date_Flagged", "Violation_Status")
+            VALUES ($1, CURRENT_DATE, false)
+          `, [listing["Listing_ID"]]);
+
+          console.log(`[MATCHED] Inserted violation from Listing ${listing["Listing_ID"]}`);
+          inserted++;
+        }
       }
     }
   }
-}
-
 
   return inserted;
 }
