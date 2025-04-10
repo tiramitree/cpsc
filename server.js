@@ -181,6 +181,53 @@ app.get('/db-check', async (req, res) => {
     });
   }
 });
+// 4) POST /api/import-listing
+app.post('/api/import-listing', async (req, res) => {
+  const {
+    Listing_ID,
+    Product_Name,
+    Listing_Date,
+    Price,
+    Category,
+    URL,
+    Seller_ID,
+    Marketplace_ID
+  } = req.body;
+
+  // 检查必填字段
+  if (!Listing_ID || !Product_Name || !Listing_Date || !Price ||
+      !Category || !URL || !Seller_ID || !Marketplace_ID) {
+    return res.status(400).json({ error: 'All fields are required.' });
+  }
+
+  if (new Date(Listing_Date) > new Date()) {
+    return res.status(400).json({ error: 'Listing date cannot be in the future.' });
+  }
+
+  try {
+    await pool.query(`
+      INSERT INTO public."Listings"
+      ("Listing_ID", "Product_Name", "Listing_Date", "Price", "Category",
+       "URL", "Seller_ID", "Marketplace_ID", "Violation")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false)
+    `, [
+      Listing_ID,
+      Product_Name,
+      Listing_Date,
+      Price,
+      Category,
+      URL,
+      Seller_ID,
+      Marketplace_ID
+    ]);
+
+    res.json({ message: 'Listing successfully imported!' });
+  } catch (err) {
+    console.error('[IMPORT LISTING ERROR]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 
 // === 5) Violations Endpoints
@@ -222,7 +269,6 @@ app.patch('/api/violations/:id', async (req, res) => {
       return res.status(400).json({ error: 'Missing outcome or reasoning.' });
     }
 
-    // 从 session 获取当前登录的用户姓名，如果没有，则标为 Unknown
     const investigator_name = req.session?.user?.Name || 'Unknown';
 
     await pool.query(`
@@ -249,7 +295,7 @@ app.patch('/api/violations/:id', async (req, res) => {
 async function runMatchingNow() {
   // 1) Load Recalls
   const recallRes = await pool.query(`
-    SELECT "Product_Name"
+    SELECT "Product_Name", "Manufacturer"
     FROM public."Recalls"
     ORDER BY "Recall_Date" DESC
     LIMIT 500
@@ -274,7 +320,6 @@ async function runMatchingNow() {
       const recallName = recall["Product_Name"]?.toLowerCase().trim() || '';
 
       if (listingName === recallName && listingName !== '') {
-        // 检查是否已存在（避免重复插入）
         const existing = await pool.query(`
           SELECT 1 FROM public."Violations"
           WHERE "Listing_ID" = $1
@@ -283,11 +328,14 @@ async function runMatchingNow() {
         if (existing.rowCount === 0) {
           await pool.query(`
             INSERT INTO public."Violations"
-            ("Listing_ID", "Date_Flagged", "Violation_Status")
-            VALUES ($1, CURRENT_DATE, false)
-          `, [listing["Listing_ID"]]);
+            ("Listing_ID", "Date_Flagged", "Violation_Status", "Manufacturer")
+            VALUES ($1, CURRENT_DATE, false, $2)
+          `, [
+            listing["Listing_ID"],
+           recall["Manufacturer"] || null
+        ]);
 
-          console.log(`[MATCHED] Inserted violation from Listing ${listing["Listing_ID"]}`);
+          console.log(`[MATCHED] Inserted violation from Listing ${listing["Listing_ID"]}, ${recall["Manufacturer"]}`);
           inserted++;
         }
       }

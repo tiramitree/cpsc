@@ -29,43 +29,43 @@
 
   <form id="listingForm">
     <div class="mb-3">
-      <label for="listing_id" class="form-label">Listing ID</label>
-      <input type="text" class="form-control" id="listing_id" required />
+      <label for="Listing_ID" class="form-label">Listing ID</label>
+      <input type="text" class="form-control" id="Listing_ID" required />
     </div>
-
+  
     <div class="mb-3">
-      <label for="seller_id" class="form-label">Seller ID</label>
-      <input type="text" class="form-control" id="seller_id" required />
+      <label for="Seller_ID" class="form-label">Seller ID</label>
+      <input type="text" class="form-control" id="Seller_ID" required />
     </div>
-
+  
     <div class="mb-3">
-      <label for="product_name" class="form-label">Product Name</label>
-      <input type="text" class="form-control" id="product_name" required />
+      <label for="Product_Name" class="form-label">Product Name</label>
+      <input type="text" class="form-control" id="Product_Name" required />
     </div>
-
+  
     <div class="mb-3">
-      <label for="marketplace_id" class="form-label">Marketplace</label>
-      <select class="form-select" id="marketplace_id" required>
+      <label for="Marketplace_ID" class="form-label">Marketplace</label>
+      <select class="form-select" id="Marketplace_ID" required>
         <option value="">Select Marketplace</option>
         <option value="eBay">eBay</option>
         <option value="Amazon">Amazon</option>
         <option value="Walmart">Walmart</option>
       </select>
     </div>
-
+  
     <div class="mb-3">
-      <label for="listing_date" class="form-label">Listing Date</label>
-      <input type="date" class="form-control" id="listing_date" required />
+      <label for="Listing_Date" class="form-label">Listing Date</label>
+      <input type="date" class="form-control" id="Listing_Date" required />
     </div>
-
+  
     <div class="mb-3">
-      <label for="contact" class="form-label">Contact (email or phone)</label>
-      <input type="text" class="form-control" id="contact" required />
+      <label for="Price" class="form-label">Price</label>
+      <input type="number" step="0.01" class="form-control" id="Price" required />
     </div>
-
+  
     <div class="mb-3">
-      <label for="category" class="form-label">Category</label>
-      <select class="form-select" id="category" required>
+      <label for="Category" class="form-label">Category</label>
+      <select class="form-select" id="Category" required>
         <option value="">Select Category</option>
         <option value="Toys">Toys</option>
         <option value="Electronics">Electronics</option>
@@ -73,51 +73,49 @@
         <option value="Home">Home</option>
       </select>
     </div>
-
+  
     <div class="mb-3">
-      <label for="url" class="form-label">Listing URL</label>
-      <input type="url" class="form-control" id="url" required pattern="https?://.*" />
+      <label for="URL" class="form-label">Listing URL</label>
+      <input type="url" class="form-control" id="URL" required pattern="https?://.*" />
     </div>
-
+  
     <button type="submit" class="btn btn-primary">Submit Listing</button>
   </form>
+  
 
   <div id="message" class="mt-3"></div>
-
-  <script>
     document.getElementById('listingForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-
-      const listing_date = new Date(document.getElementById('listing_date').value);
+  
+      const listing_date = new Date(document.getElementById('Listing_Date').value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
       if (listing_date > today) {
         alert('Listing Date cannot be in the future.');
         return;
       }
-
+    
       const data = {
-        listing_id: document.getElementById('listing_id').value.trim(),
-        seller_id: document.getElementById('seller_id').value.trim(),
-        product_name: document.getElementById('product_name').value.trim(),
-        marketplace_id: document.getElementById('marketplace_id').value,
-        listing_date: document.getElementById('listing_date').value,
-        contact: document.getElementById('contact').value.trim(),
-        category: document.getElementById('category').value,
-        url: document.getElementById('url').value.trim()
+        Listing_ID: document.getElementById('Listing_ID').value.trim(),
+        Product_Name: document.getElementById('Product_Name').value.trim(),
+        Listing_Date: document.getElementById('Listing_Date').value,
+        Price: parseFloat(document.getElementById('Price').value),
+        Category: document.getElementById('Category').value,
+        URL: document.getElementById('URL').value.trim(),
+        Seller_ID: document.getElementById('Seller_ID').value.trim(),
+        Marketplace_ID: document.getElementById('Marketplace_ID').value
       };
-
+    
       try {
         const response = await fetch('/api/import-listing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-
+    
         const result = await response.json();
-
         const messageEl = document.getElementById('message');
+    
         if (response.ok) {
           messageEl.innerHTML = `<div class="alert alert-success">Listing successfully imported!</div>`;
           document.getElementById('listingForm').reset();
@@ -128,7 +126,6 @@
         alert('Error submitting listing: ' + err.message);
       }
     });
-  </script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
   const user = JSON.parse(localStorage.getItem('cpsc_user'));
