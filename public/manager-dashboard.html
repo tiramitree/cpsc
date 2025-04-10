@@ -91,14 +91,36 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-  const user = JSON.parse(localStorage.getItem('cpsc_user'));
-  if (!user) {
-    window.location.href = 'login.html';
-  } else {
-    document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
-  }
-});
-</script>
+    const user = JSON.parse(localStorage.getItem('cpsc_user'));
+    if (!user) {
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
+    }
+  
+    // ✅ 绑定 Run Matching 按钮逻辑
+    const runBtn = document.getElementById('runMatchingBtn');
+    const resultSpan = document.getElementById('matchResult');
+  
+    runBtn.addEventListener('click', async () => {
+      resultSpan.textContent = 'Running...';
+  
+      try {
+        const res = await fetch('/api/run-matching', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          resultSpan.textContent = `✔ ${data.inserted} violations inserted`;
+        } else {
+          resultSpan.textContent = `⚠ Error: ${data.error}`;
+        }
+      } catch (err) {
+        console.error('Run matching failed:', err);
+        resultSpan.textContent = '⚠ Failed to run matching';
+      }
+    });
+  });
+  </script>
+  
 
 
 

@@ -271,37 +271,33 @@ async function runMatchingNow() {
   let inserted = 0;
 
   // 3) Compare listings vs recalls by Product_Name only
-  for (const listing of listings) {
-    for (const recall of recalls) {
-      // Convert both sides to lowercase
-      const listingName = listing["Product_Name"]?.toLowerCase() || '';
-      const recallName = recall["Product_Name"]?.toLowerCase() || '';
+  // 3) Compare listings vs recalls by Product_Name only (with trim and log)
+for (const listing of listings) {
+  for (const recall of recalls) {
+    const listingName = listing["Product_Name"]?.toLowerCase().trim() || '';
+    const recallName = recall["Product_Name"]?.toLowerCase().trim() || '';
 
-      // If they match exactly, consider it a violation
-      if (listingName === recallName && listingName !== '') {
-        // Check if already in Violations
-        const existing = await pool.query(`
-          SELECT 1
-          FROM public."Violations"
-          WHERE "Listing_ID" = $1
-            AND "Recall_ID" = $2
+    if (listingName === recallName && listingName !== '') {
+      // 检查是否已存在
+      const existing = await pool.query(`
+        SELECT 1 FROM public."Violations"
+        WHERE "Listing_ID" = $1 AND "Recall_ID" = $2
+      `, [listing["Listing_ID"], recall["Recall_ID"]]);
+
+      if (existing.rowCount === 0) {
+        await pool.query(`
+          INSERT INTO public."Violations"
+          ("Listing_ID", "Recall_ID", "Date_Flagged", "Violation_Status")
+          VALUES ($1, $2, CURRENT_DATE, false)
         `, [listing["Listing_ID"], recall["Recall_ID"]]);
 
-        if (existing.rowCount === 0) {
-          // Insert a new violation record
-          // NOTE: We do NOT include "Reasoning" or anything else here
-          // and set "Violation_Status" to false.
-          await pool.query(`
-            INSERT INTO public."Violations"
-            ("Listing_ID", "Recall_ID", "Date_Flagged", "Violation_Status")
-            VALUES ($1, $2, CURRENT_DATE, false)
-          `, [listing["Listing_ID"], recall["Recall_ID"]]);
-
-          inserted++;
-        }
+        console.log(`[MATCHED] Inserted violation: "${listingName}" from Listing ${listing["Listing_ID"]}`);
+        inserted++;
       }
     }
   }
+}
+
 
   return inserted;
 }
