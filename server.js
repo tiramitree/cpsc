@@ -183,19 +183,28 @@ app.get('/db-check', async (req, res) => {
 });
 
 
-
 // === 5) Violations Endpoints
+
+// GET Violations
 app.get('/api/violations', async (req, res) => {
   try {
     const sql = `
       SELECT
-        "violation_id","listing_id","date_flagged","investigator_name",
-        "violation_outcome","alert_sent","alert_type","alert_sent_date"
-      FROM public."Violations"
-      ORDER BY "date_flagged" DESC
+        "Violation_ID",
+        "Listing_ID",
+        "Investigator_Name",
+        "Date_Flagged",
+        "Violation_Status",
+        "Alert_Sent",
+        "Alert_Type",
+        "Alert_Date",
+        "Reasoning"
+      FROM "Violations"
+      ORDER BY "Violation_ID" DESC
       LIMIT 100
     `;
     const result = await pool.query(sql);
+    // Return the rows directly or wrap in { success: true, data: result.rows }
     return res.json(result.rows);
   } catch (err) {
     console.error('[GET /api/violations ERROR]', err);
@@ -203,10 +212,15 @@ app.get('/api/violations', async (req, res) => {
   }
 });
 
+// PATCH (Update) a specific Violation
 app.patch('/api/violations/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { outcome, investigator_name, description } = req.body; // ✅ 修复点
+    // These come from front-end body:
+    // outcome => stored in "Violation_Outcome"
+    // investigator_name => "Investigator_Name"
+    // description => "Reasoning"
+    const { outcome, investigator_name, description } = req.body;
 
     if (!outcome) {
       return res.status(400).json({ error: 'missing outcome' });
@@ -214,14 +228,15 @@ app.patch('/api/violations/:id', async (req, res) => {
 
     await pool.query(`
       UPDATE public."Violations"
-      SET "violation_outcome" = $1,
-          "investigator_name" = COALESCE($2,'Unknown'),
-          "alert_sent" = CASE WHEN $1='True Positive' THEN true ELSE false END,
-          "alert_type" = CASE WHEN $1='True Positive' THEN 'Initial Notice' ELSE null END,
-          "alert_sent_date" = CASE WHEN $1='True Positive' THEN NOW() ELSE null END,
-          "annotation_description" = $3
-      WHERE "violation_id" = $4
-    `, [ outcome, investigator_name, description, id ]);
+      SET
+        "Violation_Outcome" = $1,
+        "Investigator_Name" = COALESCE($2, 'Unknown'),
+        "Alert_Sent" = CASE WHEN $1 = 'True Positive' THEN true ELSE false END,
+        "Alert_Type" = CASE WHEN $1 = 'True Positive' THEN 'Initial Notice' ELSE null END,
+        "Alert_Date" = CASE WHEN $1 = 'True Positive' THEN NOW() ELSE null END,
+        "Reasoning" = $3
+      WHERE "Violation_ID" = $4
+    `, [outcome, investigator_name, description, id]);
 
     res.json({ message: 'Violation annotated successfully' });
   } catch (err) {
@@ -230,54 +245,68 @@ app.patch('/api/violations/:id', async (req, res) => {
   }
 });
 
-
-// === 6) Manual Run-Matching Endpoint (No separate match-violations.js needed)
+// === 6) Manual Run-Matching Endpoint
 async function runMatchingNow() {
-  // Load Recalls
+  // 1) Load Recalls
   const recallRes = await pool.query(`
-    SELECT "Recall_ID","Product_Name","Category"
+    SELECT
+      "Recall_ID",
+      "Product_Name"
     FROM public."Recalls"
     ORDER BY "Recall_Date" DESC
     LIMIT 500
   `);
   const recalls = recallRes.rows;
 
-  // Load recent Listings
+  // 2) Load recent Listings
   const listRes = await pool.query(`
-    SELECT "listing_id","product_name","category"
+    SELECT
+      "Listing_ID",
+      "Product_Name"
     FROM public."Listings"
-    WHERE "listing_date" >= NOW() - interval '30 days'
+    WHERE "Listing_Date" >= NOW() - interval '30 days'
   `);
   const listings = listRes.rows;
 
   let inserted = 0;
+
+  // 3) Compare listings vs recalls by Product_Name only
   for (const listing of listings) {
     for (const recall of recalls) {
-      const sameCategory = listing.category?.toLowerCase() === recall.Category?.toLowerCase();
-      const nameMatch = listing.product_name?.toLowerCase().includes(
-        recall.Product_Name?.toLowerCase()
-      );
-      if (sameCategory && nameMatch) {
-        // check if already in Violations
+      // Convert both sides to lowercase
+      const listingName = listing["Product_Name"]?.toLowerCase() || '';
+      const recallName = recall["Product_Name"]?.toLowerCase() || '';
+
+      // If they match exactly, consider it a violation
+      if (listingName === recallName && listingName !== '') {
+        // Check if already in Violations
         const existing = await pool.query(`
-          SELECT 1 FROM public."Violations"
-          WHERE "listing_id" = $1 AND "recall_id" = $2
-        `, [listing.listing_id, recall.Recall_ID]);
+          SELECT 1
+          FROM public."Violations"
+          WHERE "Listing_ID" = $1
+            AND "Recall_ID" = $2
+        `, [listing["Listing_ID"], recall["Recall_ID"]]);
 
         if (existing.rowCount === 0) {
+          // Insert a new violation record
+          // NOTE: We do NOT include "Reasoning" or anything else here
+          // and set "Violation_Status" to false.
           await pool.query(`
             INSERT INTO public."Violations"
-            ("listing_id","recall_id","date_flagged","violation_outcome","alert_sent")
-            VALUES ($1, $2, CURRENT_DATE, 'Pending', false)
-          `, [listing.listing_id, recall.Recall_ID]);
+            ("Listing_ID", "Recall_ID", "Date_Flagged", "Violation_Status")
+            VALUES ($1, $2, CURRENT_DATE, false)
+          `, [listing["Listing_ID"], recall["Recall_ID"]]);
+
           inserted++;
         }
       }
     }
   }
+
   return inserted;
 }
 
+// runMatchingNow
 app.post('/api/run-matching', async (req, res) => {
   try {
     const count = await runMatchingNow();
@@ -287,6 +316,8 @@ app.post('/api/run-matching', async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
+
+
 
 // === Start Server (existing) ===
 app.listen(PORT, () => {

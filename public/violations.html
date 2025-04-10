@@ -1,152 +1,237 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Violations Dashboard</title>
-  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css" />
+  <meta charset="UTF-8">
+  <title>Violations</title>
+  <style>
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background: #fff;
+      padding: 16px;
+      margin: 50px auto;
+      width: 400px;
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container">
-      <a class="navbar-brand" href="#">CPSC Dashboard</a>
-      <div class="collapse navbar-collapse">
-        <ul class="navbar-nav ms-auto">
-            <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
-            <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
-            <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
-        </ul>        
-        <span id="userDisplay" class="navbar-text text-muted ms-3"></span>
-      </div>
-    </div>
-  </nav>
+  <h1>Violations</h1>
+  <div id="successMsg" style="color: green; display: none;">Annotation saved successfully</div>
 
-  <div class="container mt-4">
-    <h2>Violations Dashboard</h2>
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Violation ID</th>
-          <th>Listing ID</th>
-          <th>Investigator Name</th>
-          <th>Date Flagged</th>
-          <th>Status</th>
-          <th>Alert Sent</th>
-          <th>Alert Date</th>
-          <th>Alert Type</th>
-          <th>Annotate</th>
-        </tr>
-      </thead>
-      <tbody id="violationsTableBody"></tbody>
-    </table>
-  </div>
+  <table id="violationsTable" border="1">
+    <thead>
+      <tr>
+        <th>Violation_ID</th>
+        <th>Listing_ID</th>
+        <th>Investigator_Name</th>
+        <th>Date_Flagged</th>
+        <th>Violation_Status</th>
+        <th>Alert_Sent</th>
+        <th>Alert_Type</th>
+        <th>Alert_Date</th>
+        <th>Reasoning</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <!-- Annotation Modal -->
-  <div class="modal fade" id="annotateModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Annotate Violation</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <!-- Modal -->
+  <div class="modal" id="annotateModal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeModal">&times;</span>
+      <h3>Annotate Violation</h3>
+
+      <form id="annotateForm">
+        <div>
+          <label>
+            <input type="radio" name="annotationType" value="True Positive" />
+            True Positive
+          </label>
+          <label>
+            <input type="radio" name="annotationType" value="False Positive" />
+            False Positive
+          </label>
         </div>
-        <div class="modal-body">
-          <form id="annotateForm">
-            <input type="hidden" id="violationId" />
-            <div class="mb-3">
-              <label class="form-label">Annotation Type</label><br>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="outcome" value="True Positive" required>
-                <label class="form-check-label">True Positive</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="outcome" value="False Positive" required>
-                <label class="form-check-label">False Positive</label>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Description</label>
-              <textarea class="form-control" id="description" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Submit</button>
-          </form>
+
+        <div>
+          <label for="reasoning">Reasoning (required):</label><br />
+          <textarea id="reasoning" name="reasoning" rows="3" cols="40"></textarea>
         </div>
-      </div>
+
+        <br />
+        <button type="submit" id="submitBtn" disabled>Submit</button>
+      </form>
     </div>
   </div>
-
-  <!-- Bootstrap CSS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<!-- Bootstrap Bundle JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    const modal = new bootstrap.Modal(document.getElementById('annotateModal'));
-    const table = document.getElementById("violationsTableBody");
+    let currentViolationId = null; 
 
-    fetch('/api/violations')
-      .then(res => res.json())
-      .then(data => {
-        data.forEach(v => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${v.violation_id}</td>
-            <td>${v.listing_id}</td>
-            <td>${v.investigator_name || ''}</td>
-            <td>${v.date_flagged?.slice(0, 10) || ''}</td>
-            <td>${v.violation_outcome}</td>
-            <td>${v.alert_sent ? 'Yes' : 'No'}</td>
-            <td>${v.alert_sent_date?.slice(0, 10) || ''}</td>
-            <td>${v.alert_type || ''}</td>
-            <td>${
-            v.violation_outcome !== 'True Positive'
-                ? `<button class="btn btn-sm btn-primary annotateBtn" data-id="${v.violation_id}">Annotate</button>` 
-                : ''
-            }</td>
+    async function loadViolations() {
+      try {
+        const response = await fetch('/api/violations');
+        if (!response.ok) {
+          throw new Error('Failed to fetch violations, status: ' + response.status);
+        }
+        const data = await response.json();  
+        renderViolations(data);
+      } catch (err) {
+        console.error('Error loading violations:', err);
+      }
+    }
 
-            `;
-          table.appendChild(row);
-        });
+    function renderViolations(violations) {
+      const tbody = document.querySelector('#violationsTable tbody');
+      tbody.innerHTML = '';
 
-        document.querySelectorAll('.annotateBtn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            document.getElementById('violationId').value = btn.dataset.id;
-            modal.show();
-          });
-        });
+      violations.forEach(item => {
+        const tr = document.createElement('tr');
+
+        const tdVid = document.createElement('td');
+        tdVid.textContent = item.Violation_ID;
+        tr.appendChild(tdVid);
+
+        const tdLid = document.createElement('td');
+        tdLid.textContent = item.Listing_ID;
+        tr.appendChild(tdLid);
+
+        const tdInv = document.createElement('td');
+        tdInv.textContent = item.Investigator_Name || '';
+        tr.appendChild(tdInv);
+
+        const tdDateFlagged = document.createElement('td');
+        tdDateFlagged.textContent = item.Date_Flagged || '';
+        tr.appendChild(tdDateFlagged);
+
+        const tdStatus = document.createElement('td');
+        tdStatus.textContent = item.Violation_Status || '';
+        tr.appendChild(tdStatus);
+
+        const tdAlertSent = document.createElement('td');
+        tdAlertSent.textContent = item.Alert_Sent === true ? 'true' : 'false';
+        tr.appendChild(tdAlertSent);
+
+        const tdAlertType = document.createElement('td');
+        tdAlertType.textContent = item.Alert_Type || '';
+        tr.appendChild(tdAlertType);
+
+        const tdAlertDate = document.createElement('td');
+        tdAlertDate.textContent = item.Alert_Date || '';
+        tr.appendChild(tdAlertDate);
+
+        const tdReasoning = document.createElement('td');
+        tdReasoning.textContent = item.Reasoning || '';
+        tr.appendChild(tdReasoning);
+
+        const tdAction = document.createElement('td');
+
+        if (item.Violation_Status === 'True Positive' || item.Violation_Status === 'False Positive') {
+          tdAction.textContent = 'Annotated';
+        } else {
+          const btn = document.createElement('button');
+          btn.textContent = 'Annotate';
+          btn.addEventListener('click', () => openAnnotateModal(item.Violation_ID));
+          tdAction.appendChild(btn);
+        }
+        tr.appendChild(tdAction);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openAnnotateModal(violationId) {
+      currentViolationId = violationId;
+      document.getElementById('annotateModal').style.display = 'block';
+      document.getElementById('successMsg').style.display = 'none';
+      resetForm();
+    }
+
+    function closeAnnotateModal() {
+      document.getElementById('annotateModal').style.display = 'none';
+      resetForm();
+    }
+
+    function resetForm() {
+      document.getElementById('annotateForm').reset();
+      toggleSubmitButton();
+    }
+
+    function toggleSubmitButton() {
+      const radios = document.querySelectorAll('input[name="annotationType"]');
+      const reasoning = document.getElementById('reasoning').value.trim();
+
+      let radioChecked = false;
+      radios.forEach(r => {
+        if (r.checked) radioChecked = true;
       });
 
-    document.getElementById('annotateForm').addEventListener('input', () => {
-      const outcome = document.querySelector('input[name="outcome"]:checked');
-      const desc = document.getElementById('description').value.trim();
-      document.getElementById('submitBtn').disabled = !(outcome && desc);
-    });
-
-    document.getElementById('annotateForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const id = document.getElementById('violationId').value;
-      const outcome = document.querySelector('input[name="outcome"]:checked').value;
-      const description = document.getElementById('description').value;
-      const name = JSON.parse(localStorage.getItem('cpsc_user')).name;
-
-      const res = await fetch(`/api/violations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          outcome,
-          description,
-          investigator_name: name
-        })
-      });
-
-      if (res.ok) {
-        alert("Annotation saved successfully");
-        modal.hide();
-        location.reload();
+      const submitBtn = document.getElementById('submitBtn');
+      if (radioChecked && reasoning.length > 0) {
+        submitBtn.disabled = false;
       } else {
-        const err = await res.json();
-        alert("Error: " + err.error);
+        submitBtn.disabled = true;
+      }
+    }
+
+    document.querySelectorAll('input[name="annotationType"]').forEach(radio => {
+      radio.addEventListener('change', toggleSubmitButton);
+    });
+    document.getElementById('reasoning').addEventListener('input', toggleSubmitButton);
+
+    document.getElementById('annotateForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const radios = document.querySelectorAll('input[name="annotationType"]');
+      let outcomeValue = null;
+      radios.forEach(r => { if (r.checked) outcomeValue = r.value; });
+
+      const reasoningValue = document.getElementById('reasoning').value.trim();
+      if (!outcomeValue || !reasoningValue) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/violations/${currentViolationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            outcome: outcomeValue,
+            reasoning: reasoningValue
+          })
+        });
+        if (!response.ok) {
+          throw new Error('Patch failed, status: ' + response.status);
+        }
+        const resData = await response.json();
+        console.log('Patch result:', resData);
+
+        document.getElementById('successMsg').style.display = 'block';
+        closeAnnotateModal(); 
+        loadViolations();     
+      } catch (err) {
+        console.error('Error patching violation:', err);
+        alert('Failed to save annotation. Check console for details.');
       }
     });
+
+
+    document.getElementById('closeModal').addEventListener('click', closeAnnotateModal);
+
+    window.addEventListener('DOMContentLoaded', loadViolations);
   </script>
 </body>
 </html>
