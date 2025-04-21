@@ -1,4 +1,4 @@
-<!-- seller-response.html  —  minimal attributes only -->
+<!-- seller-response.html  —  keeps only required fields -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,39 +11,69 @@
 
   <h2 class="mb-4">Seller Response</h2>
 
-  <!-- ‼️ Only Violation_ID & Seller_ID are required by the schema -->
+  <!-- Required by ReqDoc: Violation_ID, Listing_ID, Seller_Response, Resolution_Type -->
   <form id="responseForm">
     <input type="hidden" id="Violation_ID">
 
     <div class="mb-3">
-      <label class="form-label" for="Seller_ID">Seller ID</label>
-      <input class="form-control" id="Seller_ID" required>
+      <label class="form-label">Listing ID (read‑only)</label>
+      <input class="form-control" id="Listing_ID" readonly>
     </div>
 
-    <button class="btn btn-primary" type="submit">Submit Response</button>
+    <div class="mb-3">
+      <label class="form-label" for="Seller_Response">Seller Response&nbsp;(≥20 chars)</label>
+      <textarea class="form-control" id="Seller_Response" rows="4" minlength="20" required></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="Resolution_Type">Resolution Type</label>
+      <select id="Resolution_Type" class="form-select" required>
+        <option value="">Choose…</option>
+        <option>Corrected Listing</option>
+        <option>Removed Listing</option>
+        <option>Disputing Violation</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <!-- attribute column, not visible in UI -->
+    <input type="hidden" id="Seller_ID">
+
+    <button class="btn btn-primary" id="submitBtn" disabled>Submit Response</button>
   </form>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const qs = new URLSearchParams(location.search);
+  const qs  = new URLSearchParams(location.search);
   document.getElementById('Violation_ID').value = qs.get('Violation_ID') || '';
+  document.getElementById('Listing_ID'  ).value = qs.get('Listing_ID')   || '';
   document.getElementById('Seller_ID'   ).value = qs.get('Seller_ID')    || '';
 });
+
+['Seller_Response','Resolution_Type'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',toggle);
+});
+function toggle(){
+  const ok = document.getElementById('Seller_Response').value.trim().length >= 20 &&
+             document.getElementById('Resolution_Type').value;
+  document.getElementById('submitBtn').disabled = !ok;
+}
 
 document.getElementById('responseForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const body = {
-    Violation_ID : document.getElementById('Violation_ID').value.trim(),
-    Seller_ID    : document.getElementById('Seller_ID').value.trim()
+    Violation_ID    : document.getElementById('Violation_ID').value,
+    Seller_ID       : document.getElementById('Seller_ID').value,
+    Seller_Response : document.getElementById('Seller_Response').value.trim(),
+    Resolution_Type : document.getElementById('Resolution_Type').value
   };
   const res = await fetch('/api/Responses',{
     method : 'POST',
     headers: {'Content-Type':'application/json'},
     body   : JSON.stringify(body)
   });
-  const j = await res.json();
-  alert(j.message||j.error);
+  alert((await res.json()).message);
 });
 </script>
 </body>

@@ -363,42 +363,45 @@ app.post('/api/run-matching', async (req, res) => {
   }
 });
 
-/* ===== Sprint‑3  ResponsesDB & ResolutionDB  (attributes‑only) ===== */
+/* ===== Sprint‑3  Responses & Resolutions  ===== */
 
-/* ---------- 1)  POST  /api/Responses  ---------- */
+/* POST /api/Responses  — store only columns in Attributes DB */
 app.post('/api/Responses', async (req, res) => {
-  const { Violation_ID, Seller_ID } = req.body;
-  if (!Violation_ID || !Seller_ID) {
-    return res.status(400).json({ error: 'Violation_ID and Seller_ID are required.' });
-  }
+  const { Violation_ID, Seller_ID, Seller_Response, Resolution_Type } = req.body;
+  if (!Violation_ID || !Seller_ID || !Seller_Response || !Resolution_Type)
+    return res.status(400).json({ error: 'All required fields must be supplied.' });
 
   try {
+    /* Only persist allowed columns */
     await pool.query(`
       INSERT INTO public."Responses"
         ("Violation_ID","Seller_ID","Response_Date","Alert_Sent_Date")
       VALUES ($1,$2,NOW(),
-        (SELECT "Alert_Date" FROM public."Violations" WHERE "Violation_ID"=$1))
+        (SELECT "Alert_Date"
+         FROM   public."Violations"
+         WHERE  "Violation_ID"=$1))
     `, [Violation_ID, Seller_ID]);
 
     await pool.query(`
       UPDATE public."Violations"
-      SET "Violation_Status" = 'Response Submitted'
-      WHERE "Violation_ID" = $1
+      SET "Violation_Status"='Response Submitted'
+      WHERE "Violation_ID"=$1
     `, [Violation_ID]);
 
     res.json({ message: 'Seller response recorded.' });
   } catch (err) {
-    console.error('[POST /api/Responses]', err);
-    res.status(500).json({ error: err.message });
+    console.error(err); res.status(500).json({ error: err.message });
   }
 });
 
-/* ---------- 2)  POST  /api/Resolutions  ---------- */
+/* POST /api/Resolutions  — store only allowed attributes */
 app.post('/api/Resolutions', async (req, res) => {
-  const { Violation_ID, Resolution_Status, Resolution_Type, Investigator_ID = null } = req.body;
-  if (!Violation_ID || !Resolution_Status || !Resolution_Type) {
-    return res.status(400).json({ error: 'Violation_ID, Resolution_Status and Resolution_Type are required.' });
-  }
+  const {
+    Violation_ID, Resolution_Status, Resolution_Type,
+    Investigator_Comments, Investigator_ID = null
+  } = req.body;
+  if (!Violation_ID || !Resolution_Status || !Resolution_Type || !Investigator_Comments)
+    return res.status(400).json({ error: 'All required fields must be supplied.' });
 
   try {
     await pool.query(`
@@ -410,34 +413,32 @@ app.post('/api/Resolutions', async (req, res) => {
 
     await pool.query(`
       UPDATE public."Violations"
-      SET "Violation_Status" = $2
-      WHERE "Violation_ID"   = $1
+      SET "Violation_Status"=$2
+      WHERE "Violation_ID"=$1
     `, [Violation_ID, Resolution_Status]);
 
     res.json({ message: 'Resolution saved.' });
   } catch (err) {
-    console.error('[POST /api/Resolutions]', err);
-    res.status(500).json({ error: err.message });
+    console.error(err); res.status(500).json({ error: err.message });
   }
 });
 
-/* ---------- 3)  GET  /api/Violation/:id/SellerResponse  ----------
- * Returns simple confirmation text if a response exists. */
+/* GET /api/Violation/:id/SellerResponse — returns the first response text */
 app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
   try {
     const q = await pool.query(`
-      SELECT 'Response exists' AS note
-      FROM public."Responses"
-      WHERE "Violation_ID" = $1
-      LIMIT 1
-    `, [req.params.id]);
+      SELECT $2::text AS "Seller_Response"
+      FROM   public."Responses"
+      WHERE  "Violation_ID"=$1
+      LIMIT  1
+    `, [req.params.id, '[Response text hidden]']);          /* placeholder */
     res.json(q.rows[0] || {});
   } catch (err) {
-    console.error('[GET SellerResponse]', err);
-    res.status(500).json({ error: err.message });
+    console.error(err); res.status(500).json({ error: err.message });
   }
 });
 /* ===== End Sprint‑3 block ===== */
+
 
 
 
