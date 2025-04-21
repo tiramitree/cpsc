@@ -1,0 +1,69 @@
+<!-- update-resolution.html  —  Investigator_ID optional -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Finalize Resolution</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+  <h2 class="mb-4">Finalize Resolution</h2>
+
+  <form id="resolutionForm">
+    <input type="hidden" id="Violation_ID">
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <label class="form-label" for="Resolution_Status">Resolution Status</label>
+        <select id="Resolution_Status" class="form-select" required>
+          <option value="">Choose…</option><option>Resolved</option><option>Unresolved</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="Resolution_Type">Resolution Type</label>
+        <select id="Resolution_Type" class="form-select" required>
+          <option value="">Choose…</option>
+          <option>Listing Removed</option><option>Justified</option>
+          <option>Incorrect Match</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="saveBtn" disabled>Save</button>
+  </form>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const qs = new URLSearchParams(location.search);
+  document.getElementById('Violation_ID').value = qs.get('Violation_ID') || '';
+});
+
+['Resolution_Status','Resolution_Type'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{
+    const ok = document.getElementById('Resolution_Status').value &&
+               document.getElementById('Resolution_Type').value;
+    document.getElementById('saveBtn').disabled = !ok;
+  });
+});
+
+document.getElementById('resolutionForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const body = {
+    Violation_ID     : document.getElementById('Violation_ID').value,
+    Resolution_Status: document.getElementById('Resolution_Status').value,
+    Resolution_Type  : document.getElementById('Resolution_Type').value
+    /* Investigator_ID omitted for now */
+  };
+  const res = await fetch('/api/Resolutions',{
+    method : 'POST',
+    headers: {'Content-Type':'application/json'},
+    body   : JSON.stringify(body)
+  });
+  const j = await res.json();
+  alert(j.message||j.error);
+});
+</script>
+</body>
+</html>
