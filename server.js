@@ -363,16 +363,22 @@ app.post('/api/run-matching', async (req, res) => {
   }
 });
 
-/* ===== Sprint‑3  Responses & Resolutions  ===== */
+/* ===== Sprint‑3 : Responses & Resolutions ===== */
 
-/* POST /api/Responses  — store only columns in Attributes DB */
+/* POST  /api/Responses   – store only 4 DB columns according to Attributes doc */
 app.post('/api/Responses', async (req, res) => {
-  const { Violation_ID, Seller_ID, Seller_Response, Resolution_Type } = req.body;
-  if (!Violation_ID || !Seller_ID || !Seller_Response || !Resolution_Type)
-    return res.status(400).json({ error: 'All required fields must be supplied.' });
+  const { Violation_ID, Seller_ID, Seller_Response = '', Resolution_Type } = req.body;
+
+  /* basic validation */
+  if (!Violation_ID || !Seller_ID || !Seller_Response.trim() || !Resolution_Type) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+  if (Seller_Response.trim().length < 20) {
+    return res.status(400).json({ error: 'Response must be at least 20 characters.' });
+  }
 
   try {
-    /* Only persist allowed columns */
+    /* insert into Responses – allowed attributes only */
     await pool.query(`
       INSERT INTO public."Responses"
         ("Violation_ID","Seller_ID","Response_Date","Alert_Sent_Date")
@@ -382,39 +388,39 @@ app.post('/api/Responses', async (req, res) => {
          WHERE  "Violation_ID"=$1))
     `, [Violation_ID, Seller_ID]);
 
+    /* update violation status to flag "Response Submitted" */
     await pool.query(`
       UPDATE public."Violations"
-      SET "Violation_Status"='Response Submitted'
-      WHERE "Violation_ID"=$1
+      SET "Violation_Status" = 'Response Submitted'
+      WHERE "Violation_ID"   = $1
     `, [Violation_ID]);
+
+    /* TODO: trigger Investigator notification email here (handled by separate service) */
 
     res.json({ message: 'Seller response recorded.' });
   } catch (err) {
-    console.error(err); res.status(500).json({ error: err.message });
+    console.error('[POST /api/Responses]', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* ---------- POST /api/Resolutions ----------
- * 仅写入 Attributes 文档列出的五个字段：
- * Violation_ID, Resolution_Status, Resolution_Type, Resolved_Date, Investigator_ID
- * Investigator_ID 可为空（前端隐藏字段自动注入）
- */
+/* POST  /api/Resolutions  – 5 DB columns only */
 app.post('/api/Resolutions', async (req, res) => {
   const {
-    Violation_ID,            // 必填
-    Resolution_Status,       // 必填
-    Resolution_Type,         // 必填
-    Investigator_Comments,   // 仅做验证，不入库
-    Investigator_ID = null   // 可选
+    Violation_ID,
+    Resolution_Status,
+    Resolution_Type,
+    Investigator_ID = null,
+    /* extra front‑end field for validation only */
+    Investigator_Comments = ''
   } = req.body;
 
-  /* ---------- 基本校验 ---------- */
-  if (!Violation_ID || !Resolution_Status || !Resolution_Type || !Investigator_Comments?.trim()) {
+  if (!Violation_ID || !Resolution_Status || !Resolution_Type || !Investigator_Comments.trim()) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
 
   try {
-    /* ① 插入 Resolutions 表（五列） */
+    /* insert into Resolutions – allowed attributes only */
     await pool.query(`
       INSERT INTO public."Resolutions"
         ("Violation_ID","Resolution_Status","Resolution_Type",
@@ -422,12 +428,14 @@ app.post('/api/Resolutions', async (req, res) => {
       VALUES ($1,$2,$3,NOW(),$4)
     `, [Violation_ID, Resolution_Status, Resolution_Type, Investigator_ID]);
 
-    /* ② 同步更新 Violations 主表状态 */
+    /* sync Violations current status */
     await pool.query(`
       UPDATE public."Violations"
-      SET "Violation_Status"=$2
-      WHERE "Violation_ID"=$1
+      SET "Violation_Status" = $2
+      WHERE "Violation_ID"   = $1
     `, [Violation_ID, Resolution_Status]);
+
+    /* TODO: trigger Manager notification email when Resolution_Status = 'Resolved' */
 
     res.json({ message: 'Resolution saved.' });
   } catch (err) {
@@ -436,21 +444,22 @@ app.post('/api/Resolutions', async (req, res) => {
   }
 });
 
-
-/* GET /api/Violation/:id/SellerResponse — returns the first response text */
+/* GET /api/Violation/:id/SellerResponse – returns plain response text (hidden) */
 app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
   try {
-    const q = await pool.query(`
-      SELECT $2::text AS "Seller_Response"
+    const { rows } = await pool.query(`
+      SELECT '' AS "Seller_Response"  /* text omitted for privacy */
       FROM   public."Responses"
-      WHERE  "Violation_ID"=$1
+      WHERE  "Violation_ID" = $1
       LIMIT  1
-    `, [req.params.id, '[Response text hidden]']);          /* placeholder */
-    res.json(q.rows[0] || {});
+    `, [req.params.id]);
+    res.json(rows[0] || {});
   } catch (err) {
-    console.error(err); res.status(500).json({ error: err.message });
+    console.error('[GET SellerResponse]', err);
+    res.status(500).json({ error: err.message });
   }
 });
+
 /* ===== End Sprint‑3 block ===== */
 
 
