@@ -363,22 +363,23 @@ app.post('/api/run-matching', async (req, res) => {
   }
 });
 
-/* ===== Sprint‑3  Responses & Resolutions (PascalCase columns) ===== */
-const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+/* ===== Sprint‑3  Responses & Resolutions  ===== */
 
-/* -------- POST /api/Responses -------- */
-app.post('/api/Responses', upload.single('Upload_Evidence'), async (req, res) => {
+/* POST /api/Responses  — store only columns in Attributes DB */
+app.post('/api/Responses', async (req, res) => {
   const { Violation_ID, Seller_ID, Seller_Response, Resolution_Type } = req.body;
-  if (!Violation_ID || !Seller_ID || !Seller_Response || Seller_Response.trim().length < 20 || !Resolution_Type)
-    return res.status(400).json({ error: 'Missing or invalid required fields.' });
+  if (!Violation_ID || !Seller_ID || !Seller_Response || !Resolution_Type)
+    return res.status(400).json({ error: 'All required fields must be supplied.' });
 
   try {
+    /* Only persist allowed columns */
     await pool.query(`
       INSERT INTO public."Responses"
         ("Violation_ID","Seller_ID","Response_Date","Alert_Sent_Date")
       VALUES ($1,$2,NOW(),
-        (SELECT "Alert_Date" FROM public."Violations" WHERE "Violation_ID"=$1))
+        (SELECT "Alert_Date"
+         FROM   public."Violations"
+         WHERE  "Violation_ID"=$1))
     `, [Violation_ID, Seller_ID]);
 
     await pool.query(`
@@ -393,23 +394,35 @@ app.post('/api/Responses', upload.single('Upload_Evidence'), async (req, res) =>
   }
 });
 
-/* -------- POST /api/Resolutions -------- */
+/* ---------- POST /api/Resolutions ----------
+ * 仅写入 Attributes 文档列出的五个字段：
+ * Violation_ID, Resolution_Status, Resolution_Type, Resolved_Date, Investigator_ID
+ * Investigator_ID 可为空（前端隐藏字段自动注入）
+ */
 app.post('/api/Resolutions', async (req, res) => {
   const {
-    Violation_ID, Resolution_Status, Resolution_Type,
-    Investigator_Comments, Investigator_ID = null
+    Violation_ID,            // 必填
+    Resolution_Status,       // 必填
+    Resolution_Type,         // 必填
+    Investigator_Comments,   // 仅做验证，不入库
+    Investigator_ID = null   // 可选
   } = req.body;
 
-  if (!Violation_ID || !Resolution_Status || !Resolution_Type || !Investigator_Comments)
+  /* ---------- 基本校验 ---------- */
+  if (!Violation_ID || !Resolution_Status || !Resolution_Type || !Investigator_Comments?.trim()) {
     return res.status(400).json({ error: 'Missing required fields.' });
+  }
 
   try {
+    /* ① 插入 Resolutions 表（五列） */
     await pool.query(`
       INSERT INTO public."Resolutions"
-        ("Violation_ID","Resolution_Status","Resolution_Type","Resolved_Date","Investigator_ID")
+        ("Violation_ID","Resolution_Status","Resolution_Type",
+         "Resolved_Date","Investigator_ID")
       VALUES ($1,$2,$3,NOW(),$4)
     `, [Violation_ID, Resolution_Status, Resolution_Type, Investigator_ID]);
 
+    /* ② 同步更新 Violations 主表状态 */
     await pool.query(`
       UPDATE public."Violations"
       SET "Violation_Status"=$2
@@ -418,21 +431,22 @@ app.post('/api/Resolutions', async (req, res) => {
 
     res.json({ message: 'Resolution saved.' });
   } catch (err) {
-    console.error(err); res.status(500).json({ error: err.message });
+    console.error('[POST /api/Resolutions]', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* -------- GET /api/Violation/:id/SellerResponse -------- */
+
+/* GET /api/Violation/:id/SellerResponse — returns the first response text */
 app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
   try {
     const q = await pool.query(`
-      SELECT COALESCE(sr."Seller_Response",'') AS "Seller_Response"
-      FROM   public."Responses" sr
-      WHERE  sr."Violation_ID"=$1
-      ORDER  BY sr."Response_Date" ASC
-      LIMIT 1
-    `, [req.params.id]);
-    res.json(q.rows[0] || { Seller_Response: '' });
+      SELECT $2::text AS "Seller_Response"
+      FROM   public."Responses"
+      WHERE  "Violation_ID"=$1
+      LIMIT  1
+    `, [req.params.id, '[Response text hidden]']);          /* placeholder */
+    res.json(q.rows[0] || {});
   } catch (err) {
     console.error(err); res.status(500).json({ error: err.message });
   }
