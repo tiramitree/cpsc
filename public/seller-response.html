@@ -1,79 +1,76 @@
-<!-- seller-response.html  —  keeps only required fields -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Seller Responds to Violation</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
+<h2 class="mb-4">Seller Response</h2>
 
-  <h2 class="mb-4">Seller Response</h2>
+<form id="responseForm" enctype="multipart/form-data">
+  <!-- 主键 / 外键（隐藏） -->
+  <input type="hidden" id="Violation_ID">
+  <input type="hidden" id="Seller_ID">
 
-  <!-- Required by ReqDoc: Violation_ID, Listing_ID, Seller_Response, Resolution_Type -->
-  <form id="responseForm">
-    <input type="hidden" id="Violation_ID">
+  <div class="mb-3">
+    <label class="form-label">Listing ID&nbsp;(read‑only)</label>
+    <input id="Listing_ID" class="form-control" readonly>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label">Listing ID (read‑only)</label>
-      <input class="form-control" id="Listing_ID" readonly>
-    </div>
+  <div class="mb-3">
+    <label class="form-label" for="Seller_Response">Seller Response (≥20 chars)</label>
+    <textarea id="Seller_Response" class="form-control" rows="4" minlength="20" required></textarea>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label" for="Seller_Response">Seller Response&nbsp;(≥20 chars)</label>
-      <textarea class="form-control" id="Seller_Response" rows="4" minlength="20" required></textarea>
-    </div>
+  <div class="mb-3">
+    <label class="form-label" for="Resolution_Type">Resolution Type</label>
+    <select id="Resolution_Type" class="form-select" required>
+      <option value="">Choose…</option>
+      <option>Corrected Listing</option><option>Removed Listing</option>
+      <option>Disputing Violation</option><option>Other</option>
+    </select>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label" for="Resolution_Type">Resolution Type</label>
-      <select id="Resolution_Type" class="form-select" required>
-        <option value="">Choose…</option>
-        <option>Corrected Listing</option>
-        <option>Removed Listing</option>
-        <option>Disputing Violation</option>
-        <option>Other</option>
-      </select>
-    </div>
+  <div class="mb-3">
+    <label class="form-label" for="Upload_Evidence">Upload Evidence (.jpg/.png/.pdf)</label>
+    <input id="Upload_Evidence" class="form-control" type="file" accept=".jpg,.png,.pdf">
+  </div>
 
-    <!-- attribute column, not visible in UI -->
-    <input type="hidden" id="Seller_ID">
+  <button id="submitBtn" class="btn btn-primary" disabled>Submit Response</button>
+</form>
 
-    <button class="btn btn-primary" id="submitBtn" disabled>Submit Response</button>
-  </form>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* -------- init hidden fields from URL -------- */
 document.addEventListener('DOMContentLoaded',()=>{
-  const qs  = new URLSearchParams(location.search);
-  document.getElementById('Violation_ID').value = qs.get('Violation_ID') || '';
-  document.getElementById('Listing_ID'  ).value = qs.get('Listing_ID')   || '';
-  document.getElementById('Seller_ID'   ).value = qs.get('Seller_ID')    || '';
+  const qs=new URLSearchParams(location.search);
+  ['Violation_ID','Listing_ID','Seller_ID'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value = qs.get(id) || '';
+  });
 });
 
+/* -------- enable button when valid -------- */
 ['Seller_Response','Resolution_Type'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',toggle);
+  document.getElementById(id).addEventListener('input',check);
 });
-function toggle(){
-  const ok = document.getElementById('Seller_Response').value.trim().length >= 20 &&
-             document.getElementById('Resolution_Type').value;
-  document.getElementById('submitBtn').disabled = !ok;
+function check(){
+  const ok=document.getElementById('Seller_Response').value.trim().length>=20 &&
+           document.getElementById('Resolution_Type').value;
+  document.getElementById('submitBtn').disabled=!ok;
 }
 
+/* -------- submit -------- */
 document.getElementById('responseForm').addEventListener('submit',async e=>{
   e.preventDefault();
-  const body = {
-    Violation_ID    : document.getElementById('Violation_ID').value,
-    Seller_ID       : document.getElementById('Seller_ID').value,
-    Seller_Response : document.getElementById('Seller_Response').value.trim(),
-    Resolution_Type : document.getElementById('Resolution_Type').value
-  };
-  const res = await fetch('/api/Responses',{
-    method : 'POST',
-    headers: {'Content-Type':'application/json'},
-    body   : JSON.stringify(body)
-  });
-  alert((await res.json()).message);
+  const fd=new FormData();
+  ['Violation_ID','Seller_ID','Seller_Response','Resolution_Type']
+    .forEach(k=>fd.append(k,document.getElementById(k).value.trim()));
+  const f=document.getElementById('Upload_Evidence').files[0];
+  if(f) fd.append('Upload_Evidence',f);
+
+  const r=await fetch('/api/Responses',{method:'POST',body:fd});
+  alert((await r.json()).message);
 });
 </script>
 </body>

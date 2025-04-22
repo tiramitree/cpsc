@@ -363,23 +363,22 @@ app.post('/api/run-matching', async (req, res) => {
   }
 });
 
-/* ===== Sprint‑3  Responses & Resolutions  ===== */
+/* ===== Sprint‑3  Responses & Resolutions (PascalCase columns) ===== */
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
-/* POST /api/Responses  — store only columns in Attributes DB */
-app.post('/api/Responses', async (req, res) => {
+/* -------- POST /api/Responses -------- */
+app.post('/api/Responses', upload.single('Upload_Evidence'), async (req, res) => {
   const { Violation_ID, Seller_ID, Seller_Response, Resolution_Type } = req.body;
-  if (!Violation_ID || !Seller_ID || !Seller_Response || !Resolution_Type)
-    return res.status(400).json({ error: 'All required fields must be supplied.' });
+  if (!Violation_ID || !Seller_ID || !Seller_Response || Seller_Response.trim().length < 20 || !Resolution_Type)
+    return res.status(400).json({ error: 'Missing or invalid required fields.' });
 
   try {
-    /* Only persist allowed columns */
     await pool.query(`
       INSERT INTO public."Responses"
         ("Violation_ID","Seller_ID","Response_Date","Alert_Sent_Date")
       VALUES ($1,$2,NOW(),
-        (SELECT "Alert_Date"
-         FROM   public."Violations"
-         WHERE  "Violation_ID"=$1))
+        (SELECT "Alert_Date" FROM public."Violations" WHERE "Violation_ID"=$1))
     `, [Violation_ID, Seller_ID]);
 
     await pool.query(`
@@ -394,20 +393,20 @@ app.post('/api/Responses', async (req, res) => {
   }
 });
 
-/* POST /api/Resolutions  — store only allowed attributes */
+/* -------- POST /api/Resolutions -------- */
 app.post('/api/Resolutions', async (req, res) => {
   const {
     Violation_ID, Resolution_Status, Resolution_Type,
     Investigator_Comments, Investigator_ID = null
   } = req.body;
+
   if (!Violation_ID || !Resolution_Status || !Resolution_Type || !Investigator_Comments)
-    return res.status(400).json({ error: 'All required fields must be supplied.' });
+    return res.status(400).json({ error: 'Missing required fields.' });
 
   try {
     await pool.query(`
       INSERT INTO public."Resolutions"
-        ("Violation_ID","Resolution_Status","Resolution_Type",
-         "Resolved_Date","Investigator_ID")
+        ("Violation_ID","Resolution_Status","Resolution_Type","Resolved_Date","Investigator_ID")
       VALUES ($1,$2,$3,NOW(),$4)
     `, [Violation_ID, Resolution_Status, Resolution_Type, Investigator_ID]);
 
@@ -423,16 +422,17 @@ app.post('/api/Resolutions', async (req, res) => {
   }
 });
 
-/* GET /api/Violation/:id/SellerResponse — returns the first response text */
+/* -------- GET /api/Violation/:id/SellerResponse -------- */
 app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
   try {
     const q = await pool.query(`
-      SELECT $2::text AS "Seller_Response"
-      FROM   public."Responses"
-      WHERE  "Violation_ID"=$1
-      LIMIT  1
-    `, [req.params.id, '[Response text hidden]']);          /* placeholder */
-    res.json(q.rows[0] || {});
+      SELECT COALESCE(sr."Seller_Response",'') AS "Seller_Response"
+      FROM   public."Responses" sr
+      WHERE  sr."Violation_ID"=$1
+      ORDER  BY sr."Response_Date" ASC
+      LIMIT 1
+    `, [req.params.id]);
+    res.json(q.rows[0] || { Seller_Response: '' });
   } catch (err) {
     console.error(err); res.status(500).json({ error: err.message });
   }
