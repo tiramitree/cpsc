@@ -1,3 +1,4 @@
+<!-- seller-response.html  – Seller submits to Responses table -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,26 +8,31 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="container mt-5">
-<h2 class="mb-4">Seller Response</h2>
+<h2 class="mb-4">Seller Response</h2>
 
-<!-- ──────────────  RESPONSE FORM  ────────────── -->
-<form id="responseForm">
-  <!-- PK / FK (hidden) -->
-  <input type="hidden" id="Violation_ID">
-  <input type="hidden" id="Seller_ID">
+<form id="responseForm" autocomplete="off">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Violation_ID</label>
+      <input id="Violation_ID" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Listing_ID</label>
+      <input id="Listing_ID" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Seller_ID</label>
+      <input id="Seller_ID" class="form-control" required>
+    </div>
+  </div>
 
-  <div class="mb-3">
-    <label class="form-label">Listing ID (read‑only)</label>
-    <input id="Listing_ID" class="form-control" readonly>
+  <div class="mb-3 mt-3">
+    <label class="form-label" for="Response_Text">Response_Text (≥ 20 chars)</label>
+    <textarea id="Response_Text" class="form-control" rows="4" minlength="20" required></textarea>
   </div>
 
   <div class="mb-3">
-    <label class="form-label" for="Seller_Response">Seller Response (≥ 20 characters)</label>
-    <textarea id="Seller_Response" class="form-control" rows="4" minlength="20" required></textarea>
-  </div>
-
-  <div class="mb-3">
-    <label class="form-label" for="Resolution_Type">Resolution Type</label>
+    <label class="form-label" for="Resolution_Type">Resolution_Type</label>
     <select id="Resolution_Type" class="form-select" required>
       <option value="">Choose…</option>
       <option>Corrected Listing</option>
@@ -36,48 +42,50 @@
     </select>
   </div>
 
-  <button id="submitBtn" class="btn btn-primary" disabled>Submit Response</button>
+  <button id="submitBtn" class="btn btn-primary" disabled>Submit Response</button>
 </form>
 
 <script>
-/* -------- fill hidden fields from query string -------- */
+/* pre-fill IDs from query string but keep editable */
 document.addEventListener('DOMContentLoaded', () => {
   const qs = new URLSearchParams(location.search);
   ['Violation_ID','Listing_ID','Seller_ID'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = qs.get(id) || '';
+    const v = qs.get(id);
+    if (v) document.getElementById(id).value = v;
   });
+  validate();
 });
 
-/* -------- enable submit when required fields are valid -------- */
-['Seller_Response','Resolution_Type'].forEach(id => 
-  document.getElementById(id).addEventListener('input', checkValid)
-);
-
-function checkValid () {
-  const ok = document.getElementById('Seller_Response').value.trim().length >= 20 &&
+/* validation for button enable */
+['Violation_ID','Listing_ID','Seller_ID','Response_Text','Resolution_Type']
+  .forEach(id => document.getElementById(id).addEventListener('input', validate));
+function validate () {
+  const ok = document.getElementById('Violation_ID').value &&
+             document.getElementById('Listing_ID').value &&
+             document.getElementById('Seller_ID').value &&
+             document.getElementById('Response_Text').value.trim().length >= 20 &&
              document.getElementById('Resolution_Type').value;
   document.getElementById('submitBtn').disabled = !ok;
 }
 
-/* -------- submit handler -------- */
+/* submit to backend */
 document.getElementById('responseForm').addEventListener('submit', async e => {
   e.preventDefault();
   const payload = {
-    Violation_ID     : document.getElementById('Violation_ID').value,
-    Seller_ID        : document.getElementById('Seller_ID').value,
-    Seller_Response  : document.getElementById('Seller_Response').value.trim(),
-    Resolution_Type  : document.getElementById('Resolution_Type').value
+    Violation_ID    : document.getElementById('Violation_ID').value,
+    Listing_ID      : document.getElementById('Listing_ID').value,
+    Seller_ID       : document.getElementById('Seller_ID').value,
+    Response_Text   : document.getElementById('Response_Text').value.trim(),
+    Resolution_Type : document.getElementById('Resolution_Type').value
   };
-
   const res = await fetch('/api/Responses', {
-    method : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify(payload)
-  });
+               method : 'POST',
+               headers: { 'Content-Type':'application/json' },
+               body   : JSON.stringify(payload)
+             });
   const out = await res.json();
   alert(out.message || out.error);
-  if (res.ok) location.href = 'seller-dashboard.html';
+  if (res.ok) location.href = 'violations.html';
 });
 </script>
 </body>

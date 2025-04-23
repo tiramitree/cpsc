@@ -34,34 +34,46 @@
 </nav>
 
 <!-- ②  resolution form -->
-<h2 class="mb-4">Finalize Resolution</h2>
+<h2 class="mb-4">Finalize Resolution</h2>
 
-<form id="resolutionForm">
-  <input type="hidden" id="Violation_ID">
-  <input type="hidden" id="Investigator_ID">
+<form id="resolutionForm" autocomplete="off">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Violation_ID</label>
+      <input id="Violation_ID" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Response_ID</label>
+      <input id="Response_ID" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Investigator_ID</label>
+      <input id="Investigator_ID" class="form-control" required>
+    </div>
+  </div>
 
-  <div class="mb-3">
-    <label class="form-label">Seller Response (read‑only)</label>
-    <textarea id="Seller_Response" class="form-control" rows="4" readonly></textarea>
+  <div class="mb-3 mt-3">
+    <label class="form-label">Seller_Response (may edit)</label>
+    <textarea id="Seller_Response" class="form-control" rows="3"></textarea>
   </div>
 
   <div class="mb-3">
-    <label class="form-label" for="Investigator_Comments">Investigator Comments</label>
-    <textarea id="Investigator_Comments" class="form-control" rows="3" required></textarea>
+    <label class="form-label" for="Comments">Comments</label>
+    <textarea id="Comments" class="form-control" rows="3" required></textarea>
   </div>
 
   <div class="row g-3 mb-3">
     <div class="col-md-6">
-      <label class="form-label" for="Resolution_Status">Resolution Status</label>
-      <select id="Resolution_Status" class="form-select" required>
+      <label class="form-label" for="Status">Status</label>
+      <select id="Status" class="form-select" required>
         <option value="">Choose…</option>
         <option>Resolved</option>
         <option>Unresolved</option>
       </select>
     </div>
     <div class="col-md-6">
-      <label class="form-label" for="Resolution_Type">Resolution Reason</label>
-      <select id="Resolution_Type" class="form-select" required>
+      <label class="form-label" for="Resolution_Reason">Resolution_Reason (required if Resolved)</label>
+      <select id="Resolution_Reason" class="form-select">
         <option value="">Choose…</option>
         <option>Listing Removed</option>
         <option>False Positive</option>
@@ -76,58 +88,64 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- ③  page init + button guard -->
 <script>
+/* pre-fill IDs / seller response */
 document.addEventListener('DOMContentLoaded', async () => {
-  /* read violation id from query */
   const qs  = new URLSearchParams(location.search);
-  const vid = qs.get('Violation_ID') || '';
-  document.getElementById('Violation_ID').value = vid;
+  const vid = qs.get('Violation_ID');
+  if (vid) document.getElementById('Violation_ID').value = vid;
 
-  /* inject current investigator username */
   const user = JSON.parse(localStorage.getItem('cpsc_user') || '{}');
   if (user.username) document.getElementById('Investigator_ID').value = user.username;
 
-  /* load seller response plain text (hidden in DB) */
-  try {
-    const r  = await fetch(`/api/Violation/${vid}/SellerResponse`);
-    const js = await r.json();
-    document.getElementById('Seller_Response').value = js.Seller_Response || '';
-  } catch {/* ignore */}
+  if (vid) {
+    try {
+      const r  = await fetch(`/api/Violation/${vid}/SellerResponse`);
+      const js = await r.json();
+      if (js.Response_ID)  document.getElementById('Response_ID').value  = js.Response_ID;
+      if (js.Response_Text) document.getElementById('Seller_Response').value = js.Response_Text;
+    } catch {/* ignore */}
+  }
+  validate();
 });
 
-/* enable save when all required inputs filled */
-['Investigator_Comments','Resolution_Status','Resolution_Type']
+/* enable save button only when valid */
+['Violation_ID','Response_ID','Investigator_ID','Comments','Status','Resolution_Reason','Seller_Response']
   .forEach(id => document.getElementById(id).addEventListener('input', validate));
 function validate () {
-  const ok = document.getElementById('Investigator_Comments').value.trim() &&
-             document.getElementById('Resolution_Status').value &&
-             document.getElementById('Resolution_Type').value;
+  const status = document.getElementById('Status').value;
+  const reason = document.getElementById('Resolution_Reason').value;
+  const ok = document.getElementById('Violation_ID').value &&
+             document.getElementById('Response_ID').value &&
+             document.getElementById('Investigator_ID').value &&
+             document.getElementById('Comments').value.trim() &&
+             status &&
+             (status === 'Unresolved' || reason);
   document.getElementById('saveBtn').disabled = !ok;
 }
 
-/* submit handler */
+/* submit to backend */
 document.getElementById('resolutionForm').addEventListener('submit', async e => {
   e.preventDefault();
   const body = {
     Violation_ID      : document.getElementById('Violation_ID').value,
-    Resolution_Status : document.getElementById('Resolution_Status').value,
-    Resolution_Type   : document.getElementById('Resolution_Type').value,
-    Investigator_ID   : document.getElementById('Investigator_ID').value || null,
-    Investigator_Comments : document.getElementById('Investigator_Comments').value.trim()
+    Response_ID       : document.getElementById('Response_ID').value,
+    Investigator_ID   : document.getElementById('Investigator_ID').value,
+    Status            : document.getElementById('Status').value,
+    Resolution_Reason : document.getElementById('Resolution_Reason').value || null,
+    Seller_Response   : document.getElementById('Seller_Response').value.trim(),
+    Comments          : document.getElementById('Comments').value.trim()
   };
-
   const res = await fetch('/api/Resolutions', {
-    method : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body   : JSON.stringify(body)
-  });
+               method : 'POST',
+               headers: { 'Content-Type':'application/json' },
+               body   : JSON.stringify(body)
+             });
   const out = await res.json();
   alert(out.message || out.error);
   if (res.ok) location.href = 'violations.html';
 });
 </script>
-
 <!-- ④  user check / logout – unchanged -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
