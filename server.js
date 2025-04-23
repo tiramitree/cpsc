@@ -489,6 +489,34 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
 
 /* =======================  End Sprint-3 block  ======================= */
 
+/* ----------  helper lists for test-db.html  ---------- */
+app.get(['/api/Responses', '/api/responses'], async (_, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT * FROM public."Responses"
+      ORDER BY "Response_Date" DESC
+      LIMIT 100
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('[GET /Responses]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get(['/api/Resolutions', '/api/resolutions'], async (_, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT * FROM public."Resolutions"
+      ORDER BY "Resolution_Date" DESC
+      LIMIT 100
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('[GET /Resolutions]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 // === Start Server (existing) ===

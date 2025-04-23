@@ -1,32 +1,64 @@
-<!-- test-db.html  –  Quick view of Responses & Resolutions -->
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>DB Smoke Test</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head><body class="container mt-4">
-    <h2>Responses & Resolutions (Top 100)</h2>
-    <div class="row">
-      <div class="col-md-6"><h4>Responses</h4><table id="respTbl" class="table table-sm"></table></div>
-      <div class="col-md-6"><h4>Resolutions</h4><table id="resTbl" class="table table-sm"></table></div>
-    </div>
-    
-    <script>
-    async function load (api, tbl) {
-      const r = await fetch(api); const rows = await r.json();
-      if (!Array.isArray(rows)) return;
-      const el = document.getElementById(tbl);
-      if (!rows.length) { el.innerHTML = '<tr><td>No data</td></tr>'; return; }
-      /* header */
-      el.innerHTML = `<thead><tr>`+
-        Object.keys(rows[0]).map(k=>`<th>${k}</th>`).join('')+`</tr></thead><tbody></tbody>`;
-      const body = el.querySelector('tbody');
-      rows.forEach(row=>{
-        body.insertAdjacentHTML('beforeend','<tr>'+
-          Object.values(row).map(v=>`<td>${v===null?'':v}</td>`).join('')+'</tr>');
-      });
-    }
-    load('/api/responses','respTbl');
-    load('/api/resolutions','resTbl');
-    </script>
-    </body></html>
-    
+<!-- test-db.html  –  Quick browser for Sprint-3 tables -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>DB Test – Responses & Resolutions</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+<h2 class="mb-4">Responses &amp; Resolutions (latest 100)</h2>
+
+<div class="row">
+  <div class="col-md-6">
+    <h4>Responses</h4>
+    <table id="tblResponses" class="table table-sm table-bordered table-hover"></table>
+  </div>
+  <div class="col-md-6">
+    <h4>Resolutions</h4>
+    <table id="tblResolutions" class="table table-sm table-bordered table-hover"></table>
+  </div>
+</div>
+
+<script>
+/* fetch JSON helper */
+async function fetchRows(api) {
+  const res = await fetch(api, { headers:{Accept:'application/json'} });
+  if (!res.ok) throw new Error(`${api} → ${res.status}`);
+  return res.json();
+}
+
+/* render rows into table */
+function render(id, rows) {
+  const tbl = document.getElementById(id);
+  if (!Array.isArray(rows) || !rows.length) {
+    tbl.innerHTML = '<tr><td class="text-muted">No data</td></tr>';
+    return;
+  }
+  const cols = Object.keys(rows[0]);
+  tbl.innerHTML =
+    '<thead><tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody></tbody>';
+  const tbody = tbl.querySelector('tbody');
+  rows.forEach(r=>{
+    tbody.insertAdjacentHTML('beforeend',
+      '<tr>'+cols.map(k=>`<td>${r[k]===null?'':r[k]}</td>`).join('')+'</tr>');
+  });
+}
+
+/* load both tables in parallel */
+(async()=>{
+  try{
+    const [resp,reso] = await Promise.all([
+      fetchRows('/api/Responses'),
+      fetchRows('/api/Resolutions')
+    ]);
+    render('tblResponses', resp);
+    render('tblResolutions', reso);
+  }catch(e){
+    alert('Load failed: '+e.message);
+  }
+})();
+</script>
+</body>
+</html>
