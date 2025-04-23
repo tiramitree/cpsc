@@ -377,19 +377,20 @@ app.post(['/api/Responses', '/api/responses'], expressCase, async (req, res) => 
     Resolution_Type
   } = req.body;
 
-  /* basic validation */
   if (!Violation_ID || !Listing_ID || !Seller_ID || !Resolution_Type || Response_Text.trim().length < 20) {
     return res.status(400).json({ error: 'Missing or invalid fields.' });
   }
 
   try {
-    /* get original Alert_Date (may be null) */
     const { rows: vRows } = await pool.query(
       `SELECT "Alert_Date" FROM public."Violations" WHERE "Violation_ID"=$1 LIMIT 1`,
       [Violation_ID]
     );
 
-    /* insert into Responses (columns per Attributes doc) */
+    if (!vRows.length) {
+      return res.status(400).json({ error: 'Invalid Violation_ID' });
+    }
+
     await pool.query(`
       INSERT INTO public."Responses"
         ("Violation_ID","Listing_ID","Seller_ID","Alert_Date",
@@ -399,16 +400,15 @@ app.post(['/api/Responses', '/api/responses'], expressCase, async (req, res) => 
       Violation_ID,
       Listing_ID,
       Seller_ID,
-      vRows[0]?.Alert_Date || null,
+      vRows[0].Alert_Date || null,
       Response_Text.trim(),
       Resolution_Type
     ]);
 
-    /* update violation status */
     await pool.query(`
       UPDATE public."Violations"
       SET "Violation_Status" = 'Response Submitted'
-      WHERE "Violation_ID"   = $1
+      WHERE "Violation_ID" = $1
     `, [Violation_ID]);
 
     res.json({ message: 'Seller response recorded.' });
@@ -423,10 +423,10 @@ app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT "Response_ID","Response_Text"
-      FROM   public."Responses"
-      WHERE  "Violation_ID" = $1
-      ORDER  BY "Response_Date" DESC
-      LIMIT  1
+      FROM public."Responses"
+      WHERE "Violation_ID" = $1
+      ORDER BY "Response_Date" DESC
+      LIMIT 1
     `, [req.params.id]);
     res.json(rows[0] || {});
   } catch (err) {
@@ -441,14 +441,14 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
     Violation_ID,
     Response_ID,
     Investigator_ID,
-    Status,               // Resolved | Unresolved
-    Resolution_Reason,    // required if Resolved
-    Seller_Response = '', // investigator may edit / attach
-    Comments = ''
+    Status,
+    Resolution_Reason,
+    Seller_Response = '',
+    Comments = '',
+    Resolution_Type // ✅ now explicitly accepted
   } = req.body;
 
-  /* validation rules from Requirements doc */
-  if (!Violation_ID || !Response_ID || !Investigator_ID || !Status || !Comments.trim()) {
+  if (!Violation_ID || !Response_ID || !Investigator_ID || !Status || !(Comments || '').trim()) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
   if (Status === 'Resolved' && !Resolution_Reason) {
@@ -456,13 +456,12 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
   }
 
   try {
-    /* insert into Resolutions (all 10 columns) */
     await pool.query(`
       INSERT INTO public."Resolutions"
         ("Response_ID","Investigator_ID","Status","Resolution_Date",
          "Violation_ID","Resolution_Reason","Seller_Response",
          "Comments","Resolution_Type")
-      VALUES ($1,$2,$3,NOW(),$4,$5,$6,$7,$5)
+      VALUES ($1,$2,$3,NOW(),$4,$5,$6,$7,$8)
     `, [
       Response_ID,
       Investigator_ID,
@@ -470,14 +469,14 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
       Violation_ID,
       Resolution_Reason || null,
       Seller_Response.trim(),
-      Comments.trim()
+      Comments.trim(),
+      Resolution_Type || Resolution_Reason || null  // fallback if frontend didn't send explicit type
     ]);
 
-    /* sync Violations current status */
     await pool.query(`
       UPDATE public."Violations"
       SET "Violation_Status" = $2
-      WHERE "Violation_ID"   = $1
+      WHERE "Violation_ID" = $1
     `, [Violation_ID, Status]);
 
     res.json({ message: 'Resolution saved.' });
