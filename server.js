@@ -462,6 +462,21 @@ app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
   const placeholders = vals.map((_, i) => `$${i + 1}`).join(',');
 
   try {
+        // --- Check if this violation was already resolved ---
+        const { rows: dup } = await pool.query(`
+          SELECT 1
+          FROM public."Resolution"
+          WHERE "Violation_ID" = $1 AND "Status" <> 'Unresolved'
+          LIMIT 1
+        `, [Violation_ID]);
+    
+        if (dup.length) {
+          return res.status(409).json({
+            error: 'Violation already resolved – duplicate resolution not allowed.'
+          });
+        }
+    
+
     await pool.query(`
       INSERT INTO public."Resolution" (${cols.join(',')})
       VALUES (${placeholders})
