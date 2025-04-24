@@ -16,7 +16,7 @@ console.log('✅ App starting...');
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const pool = require('./config/db'); // <--- import from db.js
+const pool = require('./config/db'); 
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -170,24 +170,7 @@ app.get('/api/recalls', async (req, res) => {
   }
 });
 
-// === DB Health Check (existing) ===
-// Example in server.js
-app.get('/db-check', async (req, res) => {
-  try {
-    // 示例：查询数据库，或仅测试连接
-    // 如果成功：
-    res.json({ success: true, message: 'Database connected successfully.' });
-    
-    // 如果有错误可以抛出，如：
-    // throw new Error('DB connection failure...');
-  } catch (err) {
-    console.error('DB Check error:', err);
-    res.status(500).json({
-      success: false,
-      message: err.message || 'Database error'
-    });
-  }
-});
+
 // 4) POST /api/import-listing
 app.post('/api/import-listing', async (req, res) => {
   const {
@@ -365,7 +348,7 @@ app.post('/api/run-matching', async (req, res) => {
 
 /* =======================  Sprint-3 : Responses & Resolutions  ======================= */
 
-const expressCase = { sensitive: false };   // support /Responses or /responses (case-insensitive)
+const expressCase = { sensitive: false };  
 
 /* ───────────── 1. Seller submits a response →  public."Responses" ───────────── */
 app.post(['/api/Responses', '/api/responses'], async (req, res) => {
@@ -435,48 +418,60 @@ app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
   }
 });
 
-/* ───────────── 2. Investigator finalises →  public."Resolutions" ───────────── */
+/* ───────────── 2. Investigator finalises →  public."Resolution" ───────────── */
 app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
   const {
-    Violation_ID,
+    // new optional PK
+    Resolution_ID,
+    // existing required fields
     Response_ID,
     Investigator_ID,
     Status,
+    Resolution_Date,      // new required
+    Violation_ID,
     Resolution_Reason,
     Seller_Response = '',
-    Comments = '',
-    Resolution_Type // ✅ now explicitly accepted
+    Comments        = '',
+    Resolution_Type
   } = req.body;
 
-  if (!Violation_ID || !Response_ID || !Investigator_ID || !Status || !(Comments || '').trim()) {
+  /* ---------- validation ---------- */
+  if (!Violation_ID || !Response_ID || !Investigator_ID ||
+      !Status || !Resolution_Date || !Comments.trim()) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
   if (Status === 'Resolved' && !Resolution_Reason) {
     return res.status(400).json({ error: 'Resolution_Reason required when Status = Resolved.' });
   }
 
+  /* ---------- build dynamic insert ---------- */
+  const cols = ['"Response_ID"', '"Investigator_ID"', '"Status"',
+                '"Resolution_Date"', '"Violation_ID"',
+                '"Resolution_Reason"', '"Seller_Response"',
+                '"Comments"', '"Resolution_Type"'];
+  const vals = [Response_ID, Investigator_ID, Status,
+                Resolution_Date, Violation_ID,
+                Resolution_Reason || null, Seller_Response.trim(),
+                Comments.trim(), Resolution_Type || Resolution_Reason || null];
+
+  if (Resolution_ID) {   // caller supplied explicit PK
+    cols.unshift('"Resolution_ID"');
+    vals.unshift(Resolution_ID);
+  }
+
+  const placeholders = vals.map((_, i) => `$${i + 1}`).join(',');
+
   try {
     await pool.query(`
-      INSERT INTO public."Resolution"
-        ("Response_ID","Investigator_ID","Status","Resolution_Date",
-         "Violation_ID","Resolution_Reason","Seller_Response",
-         "Comments","Resolution_Type")
-      VALUES ($1,$2,$3,NOW(),$4,$5,$6,$7,$8)
-    `, [
-      Response_ID,
-      Investigator_ID,
-      Status,
-      Violation_ID,
-      Resolution_Reason || null,
-      Seller_Response.trim(),
-      Comments.trim(),
-      Resolution_Type || Resolution_Reason || null 
-    ]);
+      INSERT INTO public."Resolution" (${cols.join(',')})
+      VALUES (${placeholders})
+    `, vals);
 
+    // update Violations table
     await pool.query(`
       UPDATE public."Violations"
       SET "Violation_Status" = $2
-      WHERE "Violation_ID" = $1
+      WHERE "Violation_ID"   = $1
     `, [Violation_ID, Status]);
 
     res.json({ message: 'Resolution saved.' });
@@ -485,8 +480,8 @@ app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 /* =======================  End Sprint-3 block  ======================= */
+
 
 /* ----------  helper lists for test-db.html  ---------- */
 app.get(['/api/Responses', '/api/responses'], async (_, res) => {
