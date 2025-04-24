@@ -368,7 +368,7 @@ app.post('/api/run-matching', async (req, res) => {
 const expressCase = { sensitive: false };   // support /Responses or /responses (case-insensitive)
 
 /* ───────────── 1. Seller submits a response →  public."Responses" ───────────── */
-app.post(['/api/Responses', '/api/responses'], expressCase, async (req, res) => {
+app.post(['/api/Responses', '/api/responses'], async (req, res) => {
   const {
     Violation_ID,
     Listing_ID,
@@ -436,7 +436,7 @@ app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
 });
 
 /* ───────────── 2. Investigator finalises →  public."Resolutions" ───────────── */
-app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res) => {
+app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
   const {
     Violation_ID,
     Response_ID,
@@ -457,7 +457,7 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
 
   try {
     await pool.query(`
-      INSERT INTO public."Resolutions"
+      INSERT INTO public."Resolution"
         ("Response_ID","Investigator_ID","Status","Resolution_Date",
          "Violation_ID","Resolution_Reason","Seller_Response",
          "Comments","Resolution_Type")
@@ -470,7 +470,7 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
       Resolution_Reason || null,
       Seller_Response.trim(),
       Comments.trim(),
-      Resolution_Type || Resolution_Reason || null  // fallback if frontend didn't send explicit type
+      Resolution_Type || Resolution_Reason || null 
     ]);
 
     await pool.query(`
@@ -481,7 +481,7 @@ app.post(['/api/Resolutions', '/api/resolutions'], expressCase, async (req, res)
 
     res.json({ message: 'Resolution saved.' });
   } catch (err) {
-    console.error('[POST /Resolutions]', err);
+    console.error('[POST /Resolution]', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -503,16 +503,16 @@ app.get(['/api/Responses', '/api/responses'], async (_, res) => {
   }
 });
 
-app.get(['/api/Resolutions', '/api/resolutions'], async (_, res) => {
+app.get(['/api/Resolution', '/api/resolution'], async (_, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT * FROM public."Resolutions"
+      SELECT * FROM public."Resolution"
       ORDER BY "Resolution_Date" DESC
       LIMIT 100
     `);
     res.json(rows);
   } catch (err) {
-    console.error('[GET /Resolutions]', err);
+    console.error('[GET /Resolution]', err);
     res.status(500).json({ error: err.message });
   }
 });

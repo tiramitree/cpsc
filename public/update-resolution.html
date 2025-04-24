@@ -1,15 +1,12 @@
-<!-- update‑resolution.html — Finalize Resolution -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Finalize Resolution</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Violation Resolution</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="container mt-5">
-
-<!-- ①  existing navbar – unchanged  -->
+<body>
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="manager-dashboard.html">CPSC Dashboard</a>
@@ -20,10 +17,10 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
+        <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
         <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
-        <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
-        <li class="nav-item"><a class="nav-link" href="update-resolution.html">Update‑Resolution</a></li>
+        <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
+        <li class="nav-item"><a class="nav-link" href="update-resolution.html">Update-resolution</a></li>
       </ul>
       <span class="navbar-text text-muted ms-3">
         <span id="userDisplay"></span>
@@ -33,132 +30,148 @@
   </div>
 </nav>
 
-<!-- ②  resolution form -->
-<h2 class="mb-4">Finalize Resolution</h2>
+<div class="container mt-4">
+  <h1>Investigator Final Resolution</h1>
 
-<form id="resolutionForm" autocomplete="off">
-  <div class="row g-3">
-    <div class="col-md-4">
-      <label class="form-label">Violation_ID</label>
-      <input id="Violation_ID" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-      <label class="form-label">Response_ID</label>
-      <input id="Response_ID" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-      <label class="form-label">Investigator_ID</label>
-      <input id="Investigator_ID" class="form-control" required>
-    </div>
+  <div id="successMsg" class="alert alert-success d-none" role="alert">
+    ✔ Violation resolution updated.
   </div>
 
-  <div class="mb-3 mt-3">
-    <label class="form-label">Seller_Response (may edit)</label>
-    <textarea id="Seller_Response" class="form-control" rows="3"></textarea>
-  </div>
+  <form id="resolutionForm" class="needs-validation" novalidate>
+    <input type="hidden" id="Violation_ID"   name="Violation_ID">
+    <input type="hidden" id="Response_ID"    name="Response_ID">
+    <input type="hidden" id="Investigator_ID" name="Investigator_ID">
 
-  <div class="mb-3">
-    <label class="form-label" for="Comments">Comments</label>
-    <textarea id="Comments" class="form-control" rows="3" required></textarea>
-  </div>
-
-  <div class="row g-3 mb-3">
-    <div class="col-md-6">
-      <label class="form-label" for="Status">Status</label>
-      <select id="Status" class="form-select" required>
-        <option value="">Choose…</option>
-        <option>Resolved</option>
-        <option>Unresolved</option>
-      </select>
+    <div class="mb-3">
+      <label class="form-label">Seller Response (read-only)</label>
+      <textarea class="form-control" id="Seller_Response" name="Seller_Response" rows="4" readonly></textarea>
     </div>
-    <div class="col-md-6">
-      <label class="form-label" for="Resolution_Reason">Resolution_Reason (required if Resolved)</label>
-      <select id="Resolution_Reason" class="form-select">
-        <option value="">Choose…</option>
-        <option>Listing Removed</option>
-        <option>False Positive</option>
-        <option>Product Different from Recall</option>
-        <option>Other</option>
-      </select>
-    </div>
-  </div>
 
-  <button id="saveBtn" class="btn btn-primary" disabled>Save</button>
-</form>
+    <div class="mb-3">
+      <label for="Comments" class="form-label">Investigator Comments</label>
+      <textarea class="form-control" id="Comments" name="Comments" rows="4" required></textarea>
+      <div class="invalid-feedback">Comments are required.</div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="Status" class="form-label">Resolution Status</label>
+        <select class="form-select" id="Status" name="Status" required>
+          <option value="" selected disabled>-- Select --</option>
+          <option>Resolved</option>
+          <option>Unresolved</option>
+        </select>
+        <div class="invalid-feedback">Status is required.</div>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="Resolution_Reason" class="form-label">Resolution Reason</label>
+        <select class="form-select" id="Resolution_Reason" name="Resolution_Reason" disabled>
+          <option value="" selected disabled>-- Select --</option>
+          <option>Listing Removed</option>
+          <option>False Positive</option>
+          <option>Product Different from Recall</option>
+          <option>Other</option>
+        </select>
+        <div class="invalid-feedback">Required when Resolved.</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="submitBtn" type="submit" disabled>Finalize Resolution</button>
+  </form>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-/* pre-fill IDs / seller response */
 document.addEventListener('DOMContentLoaded', async () => {
-  const qs  = new URLSearchParams(location.search);
-  const vid = qs.get('Violation_ID');
-  if (vid) document.getElementById('Violation_ID').value = vid;
+  const user = JSON.parse(localStorage.getItem('cpsc_user'));
+  if (!user) { window.location.href='login.html'; return; }
+  document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
+  document.getElementById('Investigator_ID').value = user.username;
 
-  const user = JSON.parse(localStorage.getItem('cpsc_user') || '{}');
-  if (user.username) document.getElementById('Investigator_ID').value = user.username;
+  const qs = new URLSearchParams(location.search);
+  const vid = qs.get('Violation_ID') || '';
+  document.getElementById('Violation_ID').value = vid;
 
-  if (vid) {
-    try {
-      const r  = await fetch(`/api/Violation/${vid}/SellerResponse`);
-      const js = await r.json();
-      if (js.Response_ID)  document.getElementById('Response_ID').value  = js.Response_ID;
-      if (js.Response_Text) document.getElementById('Seller_Response').value = js.Response_Text;
-    } catch {/* ignore */}
-  }
-  validate();
+
+  enableBtn();
 });
 
-/* enable save button only when valid */
-['Violation_ID','Response_ID','Investigator_ID','Comments','Status','Resolution_Reason','Seller_Response']
-  .forEach(id => document.getElementById(id).addEventListener('input', validate));
-function validate () {
-  const status = document.getElementById('Status').value;
-  const reason = document.getElementById('Resolution_Reason').value;
-  const ok = document.getElementById('Violation_ID').value &&
-             document.getElementById('Response_ID').value &&
-             document.getElementById('Investigator_ID').value &&
-             document.getElementById('Comments').value.trim() &&
-             status &&
-             (status === 'Unresolved' || reason);
-  document.getElementById('saveBtn').disabled = !ok;
+document.getElementById('logoutBtn').addEventListener('click', e => {
+  e.preventDefault(); localStorage.removeItem('cpsc_user'); location.href='login.html';
+});
+
+/* ----- validation rules ----- */
+const form = document.getElementById('resolutionForm');
+const statusSel = form.Status;
+const reasonSel = form.Resolution_Reason;
+const btn = document.getElementById('submitBtn');
+form.addEventListener('input', enableBtn);
+
+statusSel.addEventListener('change', () => {
+  const need = statusSel.value === 'Resolved';
+  reasonSel.disabled = !need;
+  if (!need) reasonSel.value = '';
+  enableBtn();
+});
+
+function enableBtn() {
+  const ok = form.Comments.value.trim() &&
+             statusSel.value &&
+             (statusSel.value === 'Unresolved' || reasonSel.value);
+  btn.disabled = !ok;
 }
 
-/* submit to backend */
-document.getElementById('resolutionForm').addEventListener('submit', async e => {
+form.addEventListener('submit', async e => {
   e.preventDefault();
-  const body = {
-    Violation_ID      : document.getElementById('Violation_ID').value,
-    Response_ID       : document.getElementById('Response_ID').value,
-    Investigator_ID   : document.getElementById('Investigator_ID').value,
-    Status            : document.getElementById('Status').value,
-    Resolution_Reason : document.getElementById('Resolution_Reason').value || null,
-    Seller_Response   : document.getElementById('Seller_Response').value.trim(),
-    Comments          : document.getElementById('Comments').value.trim()
-  };
-  const res = await fetch('/api/Resolutions', {
-               method : 'POST',
-               headers: { 'Content-Type':'application/json' },
-               body   : JSON.stringify(body)
-             });
-  const out = await res.json();
-  alert(out.message || out.error);
-  if (res.ok) location.href = 'violations.html';
-});
-</script>
-<!-- ④  user check / logout – unchanged -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const user = JSON.parse(localStorage.getItem('cpsc_user'));
-  if (!user) { window.location.href = 'login.html'; }
-  else       { document.getElementById('userDisplay').innerText = `👤 ${user.name}`; }
+  if (!form.checkValidity()) { form.classList.add('was-validated'); return; }
 
-  document.getElementById('logoutBtn')?.addEventListener('click', e => {
-    e.preventDefault();
-    localStorage.removeItem('cpsc_user');
-    window.location.href = 'login.html';
-  });
+  const payload = {
+    Violation_ID    : form.Violation_ID.value,
+    Response_ID     : form.Response_ID.value,
+    Investigator_ID : form.Investigator_ID.value,
+    Status          : statusSel.value,
+    Resolution_Reason : reasonSel.value || null,
+    Seller_Response : form.Seller_Response.value,
+    Comments        : form.Comments.value.trim(),
+    Resolution_Type : reasonSel.value || null
+  };
+
+  try {
+    const r = await fetch('/api/resolution', {
+      method :'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body   : JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    document.getElementById('successMsg').classList.remove('d-none');
+    form.reset(); enableBtn();
+    setTimeout(() => location.href='violations.html', 1200);
+  } catch (err) {
+    alert('Save failed.'); console.error(err);
+  }
 });
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = JSON.parse(localStorage.getItem('cpsc_user'));
+    if (!user) {
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
+    }
+
+    // 🔒 Logout 功能
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('cpsc_user');
+        window.location.href = 'login.html';
+      });
+    }
+  });
+</script>
+
 </body>
 </html>
