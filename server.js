@@ -417,19 +417,14 @@ app.get('/api/Violation/:id/SellerResponse', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
 /* ───────────── 2. Investigator finalises →  public."Resolution" ───────────── */
 app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
   const {
-    // new optional PK
-    Resolution_ID,
-    // existing required fields
     Response_ID,
     Investigator_ID,
     Status,
-    Resolution_Date,      // new required
+    Resolution_Date,
     Violation_ID,
-    Resolution_Reason,
     Seller_Response = '',
     Comments        = '',
     Resolution_Type
@@ -437,53 +432,30 @@ app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
 
   /* ---------- validation ---------- */
   if (!Violation_ID || !Response_ID || !Investigator_ID ||
-      !Status || !Resolution_Date || !Comments.trim()) {
+      !Status || !Resolution_Date || !Comments.trim() || !Resolution_Type) {
     return res.status(400).json({ error: 'Missing required fields.' });
   }
-  if (Status === 'Resolved' && !Resolution_Reason) {
-    return res.status(400).json({ error: 'Resolution_Reason required when Status = Resolved.' });
-  }
-
-  /* ---------- build dynamic insert ---------- */
-  const cols = ['"Response_ID"', '"Investigator_ID"', '"Status"',
-                '"Resolution_Date"', '"Violation_ID"',
-                '"Resolution_Reason"', '"Seller_Response"',
-                '"Comments"', '"Resolution_Type"'];
-  const vals = [Response_ID, Investigator_ID, Status,
-                Resolution_Date, Violation_ID,
-                Resolution_Reason || null, Seller_Response.trim(),
-                Comments.trim(), Resolution_Type || Resolution_Reason || null];
-
-  if (Resolution_ID) {   // caller supplied explicit PK
-    cols.unshift('"Resolution_ID"');
-    vals.unshift(Resolution_ID);
-  }
-
-  const placeholders = vals.map((_, i) => `$${i + 1}`).join(',');
 
   try {
-        // --- Check if this violation was already resolved ---
-        const { rowCount } = await pool.query(`
-          SELECT 1
-          FROM public."Resolution"
-          WHERE "Violation_ID" = $1
-          LIMIT 1
-        `, [Violation_ID]);
-        
-        if (rowCount > 0) {
-          return res.status(409).json({
-            error: 'Violation already resolved – duplicate resolution not allowed.'
-          });
-        }
-        
-    
+    /* --- Duplicate check --- */
+    const { rowCount } = await pool.query(
+      `SELECT 1 FROM public."Resolution" WHERE "Violation_ID" = $1 LIMIT 1`,
+      [Violation_ID]
+    );
+    if (rowCount) return res.status(409).json({ error: 'Violation already resolved.' });
 
+    /* --- Insert --- */
     await pool.query(`
-      INSERT INTO public."Resolution" (${cols.join(',')})
-      VALUES (${placeholders})
-    `, vals);
+      INSERT INTO public."Resolution"
+        ("Response_ID","Investigator_ID","Status","Resolution_Date",
+         "Violation_ID","Seller_Response","Comments","Resolution_Type")
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    `, [
+      Response_ID, Investigator_ID, Status, Resolution_Date,
+      Violation_ID, Seller_Response.trim(), Comments.trim(), Resolution_Type
+    ]);
 
-    // update Violations table
+    /* --- Update violation status --- */
     await pool.query(`
       UPDATE public."Violations"
       SET "Violation_Status" = $2
@@ -496,6 +468,7 @@ app.post(['/api/Resolution', '/api/resolution'], async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 /* =======================  End Sprint-3 block  ======================= */
 
 

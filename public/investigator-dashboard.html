@@ -3,103 +3,93 @@
 <html data-bs-theme="light" lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Investigator Dashboard - CPSC Recall Management System</title>
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
-
-<!-- Navbar (Investigator simplified) -->
+<!-- ────────── Navbar ────────── -->
 <nav class="navbar navbar-expand-md navbar-light bg-light">
-    <div class="container">
-      <a class="navbar-brand" href="manager-dashboard.html">CPSC Dashboard</a>
-
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-              aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
-          <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
-          <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
-          <li class="nav-item"><a class="nav-link" href="update-resolution.html">Update-resolution</a></li>
-        </ul>        
-        <span class="navbar-text text-muted ms-3">
-          <span id="userDisplay"></span>
-          <a href="#" id="logoutBtn" class="ms-3 text-danger text-decoration-none">Logout</a>
-        </span>
-        
-      </div>
+  <div class="container">
+    <a class="navbar-brand" href="manager-dashboard.html">CPSC Dashboard</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="import-listings.html">Import Listings</a></li>
+        <li class="nav-item"><a class="nav-link" href="violations.html">Violations</a></li>
+        <li class="nav-item"><a class="nav-link" href="external-report.html">Recall Reports</a></li>
+        <li class="nav-item"><a class="nav-link" href="update-resolution.html">Update-resolution</a></li>
+      </ul>
+      <span class="navbar-text text-muted ms-3">
+        <span id="userDisplay"></span>
+        <a href="#" id="logoutBtn" class="ms-3 text-danger text-decoration-none">Logout</a>
+      </span>
     </div>
-  </nav>
+  </div>
+</nav>
 
-<!-- Welcome Message -->
+<!-- ────────── Welcome ────────── -->
 <section class="py-5 bg-light">
   <div class="container text-center">
     <h1 class="mb-4">Welcome Investigator</h1>
     <p class="fs-5">
-      Access recall reports, review shortlisted recalls, and track investigations efficiently.
+      Validate potential violations, resolve cases, and keep consumers safe.
     </p>
-    <h5 id="investigatorName" class="text-muted"></h5>
-    <div class="text-center mt-4">
-      <img src="assets/img/brands/cpsc_logo_text.png" alt="CPSC Logo" style="max-width:200px;">
-    </div>
+    <img src="assets/img/brands/cpsc_logo_text.png" alt="CPSC Logo" style="max-width:200px">
   </div>
 </section>
 
-<!-- Investigator Features -->
+<!-- ────────── Three Core Goals ────────── -->
 <section class="py-5">
   <div class="container">
     <div class="row g-4">
-
-      <div class="col-md-6">
-        <div class="card p-3">
-          <h4>Review Recall Reports</h4>
-          <p>Monitor and analyze recall data through comprehensive reports.</p>
-          <a class="btn btn-primary mt-2" href="external-report.html">View Reports</a>
+      <!-- Goal 1 -->
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
+          <h4>Investigate Violations</h4>
+          <p class="mb-0">
+            Review shortlisted listings and confirm whether they match recalled products.
+          </p>
         </div>
       </div>
-
-      <div class="col-md-6">
-        <div class="card p-3">
-          <h4>Shortlisted Recalls</h4>
-          <p>Review details of recalls shortlisted by managers and annotate investigations.</p>
-          <a class="btn btn-primary mt-2" href="shortlist.html">Review Shortlist</a>
+      <!-- Goal 2 -->
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
+          <h4>Document Resolutions</h4>
+          <p class="mb-0">
+            Submit findings, classify outcomes, and close cases within the resolution module.
+          </p>
         </div>
       </div>
-
+      <!-- Goal 3 -->
+      <div class="col-md-4">
+        <div class="card p-3 h-100">
+          <h4>Performance Metrics</h4>
+          <p class="mb-0">
+            Track personal workload, turnaround time, and resolution impact through reports.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="bold-and-bright.js"></script>
-
-
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const user = JSON.parse(localStorage.getItem('cpsc_user'));
-    if (!user) {
-      window.location.href = 'login.html';
-    } else {
-      document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  const user = JSON.parse(localStorage.getItem('cpsc_user') || '{}');
+  if (!user.username) return location.href = 'login.html';
+  document.getElementById('userDisplay').textContent = `👤 ${user.name}`;
 
-    // 🔒 Logout 功能
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('cpsc_user');
-        window.location.href = 'login.html';
-      });
-    }
-  });
+  document.getElementById('logoutBtn').onclick = e => {
+    e.preventDefault(); localStorage.removeItem('cpsc_user'); location.href = 'login.html';
+  };
+});
 </script>
-
-
-
 </body>
 </html>

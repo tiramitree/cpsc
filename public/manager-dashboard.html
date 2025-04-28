@@ -3,17 +3,15 @@
 <html data-bs-theme="light" lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manager Dashboard - CPSC Recall Management System</title>
   <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
 </head>
 <body>
-
-<!-- Navbar with Manager functionalities -->
+<!-- ────────── Navbar ────────── -->
 <nav class="navbar navbar-expand-md navbar-light bg-light">
   <div class="container">
     <a class="navbar-brand" href="manager-dashboard.html">CPSC Dashboard</a>
-
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
             aria-expanded="false" aria-label="Toggle navigation">
@@ -33,109 +31,89 @@
         <span id="userDisplay"></span>
         <a href="#" id="logoutBtn" class="ms-3 text-danger text-decoration-none">Logout</a>
       </span>
-      
     </div>
   </div>
 </nav>
 
-
-<!-- Manager Welcome Section -->
+<!-- ────────── Welcome ────────── -->
 <section class="py-5 bg-light">
   <div class="container text-center">
     <h1 class="mb-4">Welcome Manager</h1>
     <p class="fs-5">
-      Manage recalls, import data, shortlist high-priority cases, and monitor compliance effectively.
+      Lead the recall lifecycle: keep data flowing, set investigation priorities, and track nationwide compliance.
     </p>
-    <h5 id="managerName" class="text-muted"></h5>
-    <div class="text-center mt-4">
-      <img src="assets/img/brands/cpsc_logo_text.png" alt="CPSC Logo" style="max-width:200px;">
-    </div>
+    <img src="assets/img/brands/cpsc_logo_text.png" alt="CPSC Logo" style="max-width:200px">
   </div>
 </section>
 
-
-<!-- Manager Features Highlight -->
+<!-- ────────── Three Core Goals ────────── -->
 <section class="py-5">
   <div class="container">
     <div class="row g-4">
+      <!-- Goal 1 -->
       <div class="col-md-4">
-        <div class="card p-3">
-          <h4>Automated Data Import</h4>
-          <p>Fetch recall data from the official CPSC API, ensuring your system stays updated.</p>
-          <a class="btn btn-primary mt-2" href="import-recalls.html">Import Recalls</a>
+        <div class="card p-3 h-100">
+          <h4>Recall Management</h4>
+          <p class="mb-0">
+            Seamlessly ingest the latest CPSC recall feed so the team works with up-to-date information.
+          </p>
         </div>
       </div>
+      <!-- Goal 2 -->
       <div class="col-md-4">
-        <div class="card p-3">
-          <h4>Shortlist High-Priority</h4>
-          <p>Select and manage recalls that require immediate investigator attention.</p>
-          <a class="btn btn-primary mt-2" href="shortlist.html">Manage Shortlist</a>
+        <div class="card p-3 h-100">
+          <h4>Strategic</h4>
+          <p class="mb-0">
+            Flag high-risk recalls and build an actionable investigation queue for investigators.
+          </p>
         </div>
       </div>
+      <!-- Goal 3 -->
       <div class="col-md-4">
-        <div class="card p-3">
-          <h4>Reports & Analytics</h4>
-          <p>Visualize recall trends and identify critical categories quickly and effectively.</p>
-          <a class="btn btn-primary mt-2" href="external-report.html">View Reports</a>
+        <div class="card p-3 h-100">
+          <h4>Compliance Analytics</h4>
+          <p class="mb-0">
+            Monitor resolution rates, trending categories, and team KPIs through interactive dashboards.
+          </p>
         </div>
       </div>
-      <div class="container">
-        <!-- RUN MATCHING BUTTON -->
-        <button id="runMatchingBtn" class="btn btn-warning mt-3">
-          Run Matching
-        </button>
-        <span id="matchResult" class="ms-2 text-success fw-bold"></span>
-      </div>
+    </div>
+
+    <!-- Run Matching -->
+    <div class="text-center mt-5">
+      <button id="runMatchingBtn" class="btn btn-warning btn-lg">Run Matching</button>
+      <span id="matchResult" class="ms-2 fw-bold text-success"></span>
     </div>
   </div>
 </section>
 
-
 <script src="assets/bootstrap/js/bootstrap.min.js"></script>
 <script src="bold-and-bright.js"></script>
-
-
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const user = JSON.parse(localStorage.getItem('cpsc_user'));
-    if (!user) {
-      window.location.href = 'login.html';
-    } else {
-      document.getElementById('userDisplay').innerText = `👤 ${user.name}`;
-    }
-  
-    const runBtn = document.getElementById('runMatchingBtn');
-    const resultSpan = document.getElementById('matchResult');
-  
-    runBtn.addEventListener('click', async () => {
-      resultSpan.textContent = 'Running...';
-  
-      try {
-        const res = await fetch('/api/run-matching', { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-          resultSpan.textContent = `✔ ${data.inserted} violations inserted`;
-        } else {
-          resultSpan.textContent = `⚠ Error: ${data.error}`;
-        }
-      } catch (err) {
-        console.error('Run matching failed:', err);
-        resultSpan.textContent = '⚠ Failed to run matching';
-      }
-    });
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-      logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('cpsc_user');
-        window.location.href = 'login.html';
-      });
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  const user = JSON.parse(localStorage.getItem('cpsc_user') || '{}');
+  if (!user.username) return location.href = 'login.html';
+  document.getElementById('userDisplay').textContent = `👤 ${user.name}`;
+
+  const runBtn = document.getElementById('runMatchingBtn');
+  const result = document.getElementById('matchResult');
+
+  runBtn.addEventListener('click', async () => {
+    result.textContent = 'Running…';
+    try {
+      const r = await fetch('/api/run-matching', { method: 'POST' });
+      const js = await r.json();
+      result.textContent = js.success
+        ? `✔ ${js.inserted} violations inserted`
+        : `⚠ ${js.error}`;
+    } catch { result.textContent = '⚠ Failed'; }
   });
-  </script>
-  
 
-
-
+  document.getElementById('logoutBtn').onclick = e => {
+    e.preventDefault(); localStorage.removeItem('cpsc_user'); location.href = 'login.html';
+  };
+});
+</script>
 </body>
 </html>
+
